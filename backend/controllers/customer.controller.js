@@ -1,32 +1,49 @@
 import { Customer } from "../models/customer.model.js";
 import bcrypt from 'bcrypt'
 import { generateToken } from "../utils/generateToken.js";
+import { isValidEmail } from "../utils/validateEmail.js";
+import { isValidPhone } from "../utils/validatePhone.js";
 
 // customer regsitration 
 export const registerCustomer = async (req, res) => {
     let { fullname, email, phone, password } = req.body;
 
-    try{
+    try {
         // if any of the fields are missing send response 400
         if (!fullname || !email || !phone || !password) {
             return res.status(400).json({ message: "All fields are required" });
         }
 
+        //email validation 
+        if (!isValidEmail(email)) {
+            return res.status(400).json({
+                message: "Please provide a valid email address"
+            });
+        }
+
+        //phone number validation 
+        if (!isValidPhone(phone)) {
+            return res.status(400).json({
+                message: "Please provide a valid phone number"
+            });
+        }
+
         // if password is shorter 
-        if(password.length < 6){
+        if (password.length < 6) {
             return res.status(400).json({ message: "Password must be at least 6 characters long" });
         }
         email = email.toLowerCase()
-        
-        // to check if customer already exists 
-        const customerExists = await Customer.findOne({email})
 
-        if(customerExists){
+        // to check if customer already exists 
+        const customerExists = await Customer.findOne({ email })
+
+        if (customerExists) {
             return res.status(409).json({ message: "Customer already exists" });
         }
 
-        // creating hash of pass
-        const salt = await bcrypt.genSalt(10)
+        // creating hash of pass   
+        // concept - Every time you hash a password with bcrypt, it generates a random salt (a unique random value). That salt is combined with the password before hashing. The final bcrypt string encodes both the salt and the hash result.
+        const salt = await bcrypt.genSalt(10)  // 10 is the cost factor like number of rounds that bcrypt uses internally 
         const hashedPassword = await bcrypt.hash(password, salt)
 
         // creating new customer 
@@ -42,49 +59,55 @@ export const registerCustomer = async (req, res) => {
 
         // generating token
         const cookiesOptions = {
-            maxAge : 10 * 24 * 60 * 60 * 1000, // 10 days in ms
-            httpOnly : true, // it prevent client side js from accessing the cookie  
-            sameSite : "strict", // it prevent cross site request
-            secure : false, // No it does not ensure the cookie is only sent over https connection
+            maxAge: 10 * 24 * 60 * 60 * 1000, // 10 days in ms
+            httpOnly: true, // it prevent client side js from accessing the cookie  
+            sameSite: "strict", // it prevent cross site request
+            secure: false, // No it does not ensure the cookie is only sent over https connection
         }
-    
+
         const token = generateToken(newCustomer._id)
         res.cookie("token", token, cookiesOptions)
 
         return res.status(201).json({
-              success: true,
-              message: "Customer registered successfully",
-              customer: {
-                    _id: newCustomer._id,
-                    fullName: newCustomer.fullname || newCustomer.fullName,
-                    email: newCustomer.email,
-                    phone: newCustomer.phone
-              }     
+            success: true,
+            message: "Customer registered successfully",
+            customer: {
+                _id: newCustomer._id,
+                fullName: newCustomer.fullname || newCustomer.fullName,
+                email: newCustomer.email,
+                phone: newCustomer.phone
+            }
         });
 
-    }catch(error){
+    } catch (error) {
         res.status(500).json({ success: false, message: 'Server error', error: error.message });
     }
-}   
+}
 
 
 //customer login 
-export const loginCustomer = async(req, res) => {
+export const loginCustomer = async (req, res) => {
     let { email, password } = req.body
 
     // if any of the fields are missing send response 400
-    if(!email || !password){
+    if (!email || !password) {
         return res.status(400).json({ message: "All fields are required" });
     }
 
-    try{
+    if (!isValidEmail(email)) {
+        return res.status(400).json({
+            message: "Please provide a valid email address"
+        });
+    }
+
+    try {
         email = email.toLowerCase()
 
         // find customer by email
-        const customer = await Customer.findOne({email})
-        
+        const customer = await Customer.findOne({ email })
+
         // if customer does not exist return 401
-        if(!customer){
+        if (!customer) {
             return res.status(401).json({ message: "Invalid Credentials" });
         }
 
@@ -92,34 +115,34 @@ export const loginCustomer = async(req, res) => {
         const isPasswordMatched = await bcrypt.compare(password, customer.password)
 
         // if password does not match return 401
-        if(!isPasswordMatched){
+        if (!isPasswordMatched) {
             return res.status(401).json({ message: "Invalid credentials" });
         }
 
         // generating token
         const cookiesOptions = {
-            maxAge : 10 * 24 * 60 * 60 * 1000, // 10 days in ms
-            httpOnly : true, // it prevent client side js from accessing the cookie  
-            sameSite : "strict", // it prevent cross site request
-            secure : false, // No it does not ensure the cookie is only sent over https connection
+            maxAge: 10 * 24 * 60 * 60 * 1000, // 10 days in ms
+            httpOnly: true, // it prevent client side js from accessing the cookie  
+            sameSite: "strict", // it prevent cross site request
+            secure: false, // No it does not ensure the cookie is only sent over https connection
         }
-    
+
         const token = generateToken(customer._id)
         res.cookie("token", token, cookiesOptions)
 
-        return res.status(200).json({success: true, message: "Login successful" });
-    }catch(error){
+        return res.status(200).json({ success: true, message: "Login successful" });
+    } catch (error) {
         res.status(500).json({ message: "Server error", error: error.message });
     }
 }
 
 //customer logout 
-export const logoutCustomer = async(req, res) => {
+export const logoutCustomer = async (req, res) => {
     try {
-        res.clearCookie("token",{
-            httpOnly : true,
-            secure : false,
-            sameSite : "strict"
+        res.clearCookie("token", {
+            httpOnly: true,
+            secure: false,
+            sameSite: "strict"
         })
         return res.status(200).json({ message: "Customer logged out successfully" });
     } catch (error) {
@@ -139,7 +162,7 @@ export const getMe = async (req, res) => {
     // } catch (error) {
     //     return res.status(500).json({ message: "Server error", error: error.message });
     // }
-  
+
     return res.status(200).json(req.user);
 };
 

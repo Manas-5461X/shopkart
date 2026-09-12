@@ -4,6 +4,8 @@ import dotenv from 'dotenv'
 import cookieParser from 'cookie-parser'
 import customerRouter from "./routes/customer.routes.js";
 import dns from 'dns'
+import cors from 'cors'
+
 
 // TO fis the dns issue 
 dns.setServers([
@@ -19,6 +21,11 @@ const PORT = process.env.PORT || 8000
 
 
 // middlewars 
+
+app.use(cors({
+    credentials:true, // for token passing 
+    origin:"http://localhost:5173",
+}))
 app.use(express.json())
 app.use(cookieParser())
 
