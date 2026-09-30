@@ -19,10 +19,10 @@ function Register() {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault(); // so that on submit form should not get refreshed 
+    e.preventDefault(); 
     setLoading(true);
     try {
-      const res = await axiosInstance.post('/customers/register', formData); // form data is type of payload 
+      const res = await axiosInstance.post('/customers/register', formData); 
       console.log("Register response:", res.data);
       toast.success(res.data.message || "Registration successful!");
       navigate('/login');
@@ -37,149 +37,142 @@ function Register() {
 
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <div className="max-w-md w-full bg-white rounded-xl shadow-md p-8">
+    <div className="min-h-screen bg-slate-50 font-sans text-slate-900 flex flex-col">
+      {/* Top Navigation / Branding */}
+      <div className="flex justify-between items-center p-6 lg:px-12">
+        <div className="text-2xl font-bold tracking-tight text-blue-900">
+          shopkart<span className="text-blue-600">.</span>
+        </div>
+        <div className="hidden md:block text-sm text-slate-500">
+          Everyday essentials, simply delivered.
+        </div>
+      </div>
 
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h2 className="text-2xl font-bold text-gray-900">
-            Create an Account
-          </h2>
-
-          <p className="text-sm text-gray-500 mt-2">
-            Join us to start shopping today.
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col lg:flex-row items-center justify-center p-6 lg:px-12 lg:gap-24">
+        
+        {/* Left Side: Copy */}
+        <div className="w-full lg:w-1/2 max-w-lg mb-12 lg:mb-0">
+          <p className="text-blue-600 text-xs font-bold tracking-widest uppercase mb-4">
+            Shop Smarter
+          </p>
+          <h1 className="text-5xl lg:text-7xl font-serif font-bold text-blue-950 leading-[1.1] mb-6">
+            Everything you need, in one cart.
+          </h1>
+          <p className="text-slate-600 text-lg mb-8 max-w-md">
+            Create a ShopKart account to start shopping our curated selection of essentials.
           </p>
         </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-5">
+        {/* Right Side: Form Card */}
+        <div className="w-full lg:w-1/2 max-w-md">
+          <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-100">
+            <div className="p-8">
+              <h2 className="text-2xl font-bold text-slate-900 mb-2">
+                Join ShopKart
+              </h2>
+              <p className="text-sm text-slate-500 mb-8">
+                Enter your details to create an account.
+              </p>
 
-          {/* Full Name */}
-          <div>
-            <label
-              htmlFor="fullname"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Full Name
-            </label>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <label htmlFor="fullname" className="block text-sm font-semibold text-slate-900 mb-1.5">
+                    Full Name
+                  </label>
+                  <input
+                    type="text"
+                    id="fullname"
+                    name="fullname"
+                    value={formData.fullname}
+                    onChange={handleChange}
+                    placeholder="e.g. Jane Doe"
+                    className="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 outline-none transition-all placeholder-slate-400 text-sm"
+                    required
+                  />
+                </div>
 
-            <input
-              type="text"
-              id="fullname"
-              name="fullname"
-              value={formData.fullname}
-              onChange={handleChange}
-              placeholder="e.g. Jane Doe"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg
-              focus:ring-2 focus:ring-blue-500 focus:border-blue-500
-              outline-none transition-colors"
-              required
-            />
-          </div>
+                <div>
+                  <label htmlFor="email" className="block text-sm font-semibold text-slate-900 mb-1.5">
+                    Email address
+                  </label>
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    placeholder="you@example.com"
+                    className="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 outline-none transition-all placeholder-slate-400 text-sm"
+                    required
+                  />
+                </div>
 
-          {/* Email */}
-          <div>
-            <label
-              htmlFor="email"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Email Address
-            </label>
+                <div>
+                  <label htmlFor="phone" className="block text-sm font-semibold text-slate-900 mb-1.5">
+                    Phone Number
+                  </label>
+                  <input
+                    type="tel"
+                    id="phone"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    placeholder="+91 98765 43210"
+                    className="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 outline-none transition-all placeholder-slate-400 text-sm"
+                    required
+                  />
+                </div>
 
-            <input
-              type="email"
-              id="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="you@example.com"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg
-              focus:ring-2 focus:ring-blue-500 focus:border-blue-500
-              outline-none transition-colors"
-              required
-            />
-          </div>
+                <div>
+                  <label htmlFor="password" className="block text-sm font-semibold text-slate-900 mb-1.5">
+                    Password
+                  </label>
+                  <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    placeholder="At least 6 characters"
+                    className="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 outline-none transition-all placeholder-slate-400 text-sm"
+                    required
+                  />
+                </div>
 
-          {/* Phone */}
-          <div>
-            <label
-              htmlFor="phone"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Phone Number
-            </label>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className={`w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200 mt-4 flex items-center justify-center ${
+                    loading ? 'opacity-75 cursor-not-allowed' : ''
+                  }`}
+                >
+                  {loading ? (
+                    <div className="flex items-center space-x-1.5 py-1">
+                      <span className="w-2 h-2 bg-white rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+                      <span className="w-2 h-2 bg-white rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+                      <span className="w-2 h-2 bg-white rounded-full animate-bounce"></span>
+                    </div>
+                  ) : (
+                    "Create account"
+                  )}
+                </button>
+              </form>
 
-            <input
-              type="tel"
-              id="phone"
-              name="phone"
-              value={formData.phone}
-              onChange={handleChange}
-              placeholder="+91 98765 43210"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg
-              focus:ring-2 focus:ring-blue-500 focus:border-blue-500
-              outline-none transition-colors"
-              required
-            />
-          </div>
-
-          {/* Password */}
-          <div>
-            <label
-              htmlFor="password"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Password
-            </label>
-
-            <input
-              type="password"
-              id="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="••••••••"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg
-              focus:ring-2 focus:ring-blue-500 focus:border-blue-500
-              outline-none transition-colors"
-              required
-            />
-          </div>
-
-          {/* Register Button */}
-          <button
-            type="submit"
-            disabled={loading}
-            className={`w-full bg-blue-600 hover:bg-blue-700
-            text-white font-semibold py-2.5 px-4 rounded-lg
-            transition-colors duration-200 mt-2 flex items-center justify-center ${
-              loading ? 'opacity-75 cursor-not-allowed' : ''
-            }`}
-          >
-            {loading ? (
-              <div className="flex items-center space-x-1.5 py-1">
-                <span className="w-2 h-2 bg-white rounded-full animate-bounce [animation-delay:-0.3s]"></span>
-                <span className="w-2 h-2 bg-white rounded-full animate-bounce [animation-delay:-0.15s]"></span>
-                <span className="w-2 h-2 bg-white rounded-full animate-bounce"></span>
+              {/* Bottom Link */}
+              <div className="mt-6 text-center">
+                <p className="text-sm text-slate-600">
+                  Already have an account?{' '}
+                  <Link
+                    to="/login"
+                    className="font-semibold text-blue-600 hover:text-blue-500 transition-colors"
+                  >
+                    Log in here
+                  </Link>
+                </p>
               </div>
-            ) : (
-              "Sign Up"
-            )}
-          </button>
-
-        </form>
-
-        {/* Login Link */}
-        <div className="mt-6 text-center border-t border-gray-100 pt-6">
-          <p className="text-sm text-gray-600">
-            Already have an account?{' '}
-            <Link
-              to="/login"
-              className="font-semibold text-blue-600 hover:text-blue-500 transition-colors"
-            >
-              Log in here
-            </Link>
-          </p>
+            </div>
+          </div>
         </div>
 
       </div>

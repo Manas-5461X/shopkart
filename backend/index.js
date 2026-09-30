@@ -5,9 +5,9 @@ import cookieParser from 'cookie-parser'
 import customerRouter from "./routes/customer.routes.js";
 import dns from 'dns'
 import cors from 'cors'
+import productRouter from "./routes/product.routes.js";
 
-
-// TO fis the dns issue 
+// to fis the dns issue 
 dns.setServers([
   '8.8.8.8',
   '[2001:4860:4860::8888]',
@@ -31,6 +31,7 @@ app.use(cookieParser())
 
 
 app.use("/customers", customerRouter);
+app.use("/products", productRouter);
 
 mongoose.connect(process.env.dbUrl).then(() => {
     console.log("DB Connected")

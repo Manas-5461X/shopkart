@@ -1,6 +1,7 @@
-
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { AuthContext } from '../context/AuthContext';
+import toast from 'react-hot-toast';
 
 const categories = [
   { name: "Electronics", icon: "◉" },
@@ -53,6 +54,7 @@ const products = [
 function Home() {
   const navigate = useNavigate();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const { checkAuth } = useContext(AuthContext);
 
   const handleLogout = async () => {
     try {
@@ -66,12 +68,14 @@ function Home() {
       });
       const data = await res.json();
       console.log("Logout response:", data);
-      alert(data.message || "Logged out successfully");
-      navigate("/register");
+      await checkAuth(); // Clear user from context
+      toast.success(data.message || "Logged out successfully");
+      navigate("/login");
     } catch (err) {
       console.error("Logout error:", err);
-      alert("Logged out / session cleared");
-      navigate("/register");
+      await checkAuth(); // Ensure user is cleared even if network fails
+      toast.success("Logged out / session cleared");
+      navigate("/login");
     } finally {
       setIsLoggingOut(false);
     }
