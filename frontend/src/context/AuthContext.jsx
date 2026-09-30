@@ -17,7 +17,6 @@ const AuthProvider = ({ children }) => {
             const response = await axiosInstance.get('/customers/me');
             setUser(response.data.customerData || response.data);
         } catch (error) {
-            console.log(error);
             setUser(null);
         } finally {
             setLoading(false);

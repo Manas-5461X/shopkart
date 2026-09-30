@@ -112,19 +112,7 @@ function Home() {
               <span>Search products</span>
             </button>
 
-            <Link
-              to="/login"
-              className="hidden text-[13px] font-semibold text-gray-700 transition hover:text-[#6d5dfc] sm:block"
-            >
-              Login
-            </Link>
 
-            <Link
-              to="/register"
-              className="hidden text-[13px] font-semibold text-gray-700 transition hover:text-[#6d5dfc] sm:block"
-            >
-              Register
-            </Link>
 
             <button
               onClick={handleLogout}
