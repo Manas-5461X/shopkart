@@ -191,3 +191,53 @@ export const changePassword = async (req, res) => {
         res.status(500).json({ success: false, message: 'Server error', error: error.message });
     }
 };
+
+// update customer profile 
+export const updateProfile = async (req, res) => {
+    const { fullname, email, phone } = req.body;
+
+    try {
+        const customer = await Customer.findById(req.user._id);
+
+        if (!customer) {
+            return res.status(404).json({ success: false, message: "Customer not found" });
+        }
+
+        if (email && email !== customer.email) {
+            if (!isValidEmail(email)) {
+                return res.status(400).json({ success: false, message: "Please provide a valid email address" });
+            }
+            const existingEmail = await Customer.findOne({ email });
+            if (existingEmail) {
+                return res.status(409).json({ success: false, message: "Email already in use" });
+            }
+            customer.email = email.toLowerCase();
+        }
+
+        if (phone && phone !== customer.phone) {
+            if (!isValidPhone(phone)) {
+                return res.status(400).json({ success: false, message: "Please provide a valid phone number" });
+            }
+            customer.phone = phone;
+        }
+
+        if (fullname) {
+            customer.fullname = fullname;
+        }
+
+        await customer.save();
+
+        res.json({
+            success: true,
+            message: "Profile updated successfully",
+            customer: {
+                _id: customer._id,
+                fullname: customer.fullname,
+                email: customer.email,
+                phone: customer.phone
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: "Server error", error: error.message });
+    }
+};

@@ -1,30 +1,32 @@
+import uploadCloudinary from "../utils/uploadCloudinary.js";
 import { Product } from "../models/product.model.js";
+
 
 //create product
 export const createProduct = async (req, res) => {
     try {
-        const {name, description, price, category, image, stock} = req.body
+        const {name, description, price, category, stock} = req.body;
+        
+        // 1. Check if an image file was provided
+        if (!req.file) {
+             return res.status(400).json({ success: false, message: "Image is required" });
+        }
 
-        // check validation 
-        if(!name || !description || !price || !category || !image || !stock){
+        // 2. Validate fields
+        if(!name || !description || !price || !category || !stock){
             return res.status(400).json({ success: false, message: "All fields are required" });
         }
 
-        // price should be greater than 0 
-        if(price <= 0){
-            return res.status(400).json({ success: false, message: "Price must be greater than 0" });
-        }
+        // 3. Upload the buffer to Cloudinary
+        const uploadResult = await uploadCloudinary(req.file.buffer);
+        const image = uploadResult.secure_url; // Get the final URL from Cloudinary
 
-        // stock should be greater than or equal to 0 
-        if(stock < 0){
-            return res.status(400).json({ success: false, message: "Stock cannot be negative" });
-        }
+        const product = new Product({name, description, price, category, image, stock});
+        
+        // 4. Save product to mongodb 
+        await product.save();
 
-        const product = new Product({name, description, price, category, image, stock})
-        // saving product to mongodb 
-        await product.save()
-
-        res.status(201).json({ success: true, message: "Product created successfully" });
+        res.status(201).json({ success: true, message: "Product created successfully", product });
     } catch (error) {
         res.status(500).json({ success: false, message: "Error creating product", error: error.message });
     }
@@ -32,7 +34,7 @@ export const createProduct = async (req, res) => {
 
 
 
-// get all products (With search , category filter and sort)
+// get all products 
 export const getProducts = async (req, res) => {
     try {
         const { search, category, sort} = req.query;

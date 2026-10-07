@@ -1,60 +1,35 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AuthContext } from '../context/AuthContext';
+import { axiosInstance } from '../axiosCalls/axios.js';
 import toast from 'react-hot-toast';
 
 const categories = [
-  { name: "Electronics", icon: "◉" },
-  { name: "Fashion", icon: "◇" },
-  { name: "Home & Living", icon: "⌂" },
-  { name: "Beauty", icon: "✦" },
-  { name: "Sports", icon: "○" },
-  { name: "Groceries", icon: "▱" },
-];
-
-const products = [
-  {
-    id: 1,
-    name: "Wireless Headphones",
-    price: "₹1,999",
-    oldPrice: "₹3,499",
-    discount: "43% OFF",
-    image:
-      "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=900",
-  },
-  {
-    id: 2,
-    name: "Premium Sneakers",
-    price: "₹2,499",
-    oldPrice: "₹4,999",
-    discount: "50% OFF",
-    image:
-      "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=900",
-  },
-  {
-    id: 3,
-    name: "Smart Watch",
-    price: "₹2,999",
-    oldPrice: "₹5,499",
-    discount: "45% OFF",
-    image:
-      "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=900",
-  },
-  {
-    id: 4,
-    name: "Minimal Backpack",
-    price: "₹1,299",
-    oldPrice: "₹2,499",
-    discount: "48% OFF",
-    image:
-      "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=900",
-  },
+  { name: "Electronics", filter: "Electronics", icon: "◉" },
+  { name: "Fashion", filter: "Fashion", icon: "◇" },
+  { name: "Home", filter: "Home", icon: "⌂" },
+  { name: "Books", filter: "Books", icon: "✦" },
+  { name: "Other", filter: "Other", icon: "○" }
 ];
 
 function Home() {
   const navigate = useNavigate();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const { checkAuth } = useContext(AuthContext);
+  const { checkAuth, user } = useContext(AuthContext);
+  const [products, setProducts] = useState([]);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await axiosInstance.get('/products');
+        //to display the first 4 products on the home page
+        setProducts(response.data.products.slice(0, 4));
+      } catch (error) {
+        console.error("Error fetching products for home page", error);
+      }
+    };
+    fetchProducts();
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -98,10 +73,10 @@ function Home() {
           </Link>
 
           <nav className="ml-14 hidden items-center gap-9 text-[13px] font-medium lg:flex">
-            <button className="transition hover:text-[#6d5dfc]">New Arrivals</button>
-            <button className="transition hover:text-[#6d5dfc]">Categories</button>
-            <button className="transition hover:text-[#6d5dfc]">Best Sellers</button>
-            <button className="font-semibold text-[#6d5dfc]">Deals</button>
+            <Link to="/products" className="transition hover:text-[#6d5dfc]">New Arrivals</Link>
+            <Link to="/products" className="transition hover:text-[#6d5dfc]">Categories</Link>
+            <Link to="/products" className="transition hover:text-[#6d5dfc]">Best Sellers</Link>
+            <Link to="/products" className="font-semibold text-[#6d5dfc]">Deals</Link>
           </nav>
 
           <div className="ml-auto flex items-center gap-3 sm:gap-6">
@@ -112,15 +87,52 @@ function Home() {
               <span>Search products</span>
             </button>
 
+            {user ? (
+              <div className="group relative z-50">
+                <button className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-[15px] font-bold text-gray-700 transition hover:bg-gray-200 uppercase">
+                  {(user?.fullname || user?.fullName)?.charAt(0) || "👤"}
+                </button>
 
-
-            <button
-              onClick={handleLogout}
-              disabled={isLoggingOut}
-              className="cursor-pointer rounded-full bg-red-500 px-4 py-2 text-[12px] font-semibold text-white shadow-sm transition hover:bg-red-600 disabled:opacity-50"
-            >
-              {isLoggingOut ? "Logging out..." : "Logout"}
-            </button>
+                <div className="invisible absolute right-0 top-full mt-2 w-64 translate-y-2 rounded-2xl border border-black/[0.08] bg-white p-2 opacity-0 shadow-xl transition-all duration-300 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100">
+                  <div className="mb-2 flex items-center gap-3 border-b border-gray-100 px-3 pb-3 pt-2">
+                    <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-[#f1efff] text-lg font-bold uppercase text-[#6d5dfc]">
+                      {(user?.fullname || user?.fullName)?.charAt(0) || "👤"}
+                    </div>
+                    <div className="flex flex-col overflow-hidden">
+                      <p className="truncate text-sm font-bold text-gray-900">{user?.fullname || user?.fullName}</p>
+                      <p className="truncate text-[12px] text-gray-500">{user?.email}</p>
+                    </div>
+                  </div>
+                  
+                  <Link to="/profile" className="block w-full rounded-xl px-3 py-2.5 text-left text-[13px] font-semibold text-gray-700 transition hover:bg-gray-50 hover:text-[#6d5dfc]">
+                    Edit Profile
+                  </Link>
+                  
+                  <button
+                    onClick={handleLogout}
+                    disabled={isLoggingOut}
+                    className="block w-full rounded-xl px-3 py-2.5 text-left text-[13px] font-semibold text-red-600 transition hover:bg-red-50 disabled:opacity-50"
+                  >
+                    {isLoggingOut ? "Logging out..." : "Logout"}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <Link
+                  to="/login"
+                  className="hidden text-[13px] font-semibold text-gray-700 transition hover:text-[#6d5dfc] sm:block"
+                >
+                  Login
+                </Link>
+                <Link
+                  to="/register"
+                  className="hidden text-[13px] font-semibold text-gray-700 transition hover:text-[#6d5dfc] sm:block"
+                >
+                  Register
+                </Link>
+              </>
+            )}
 
             <button className="relative text-[21px] transition hover:scale-105">
               ♡
@@ -176,13 +188,13 @@ function Home() {
                 </p>
 
                 <div className="mt-9 flex flex-wrap gap-3">
-                  <button className="rounded-full bg-white px-7 py-3.5 text-sm font-bold text-black transition hover:scale-[1.02] hover:bg-[#6d5dfc] hover:text-white">
+                  <Link to="/products" className="inline-block rounded-full bg-white px-7 py-3.5 text-sm font-bold text-black transition hover:scale-[1.02] hover:bg-[#6d5dfc] hover:text-white">
                     Shop collection →
-                  </button>
+                  </Link>
 
-                  <button className="rounded-full border border-white/25 bg-white/10 px-7 py-3.5 text-sm font-semibold backdrop-blur-md transition hover:bg-white/20">
+                  <Link to="/products" className="inline-block rounded-full border border-white/25 bg-white/10 px-7 py-3.5 text-sm font-semibold backdrop-blur-md transition hover:bg-white/20">
                     Explore deals
-                  </button>
+                  </Link>
                 </div>
 
               </div>
@@ -237,15 +249,16 @@ function Home() {
               </h2>
             </div>
 
-            <button className="hidden text-xs font-bold sm:block">
+            <Link to="/products" className="hidden text-xs font-bold sm:block">
               View all →
-            </button>
+            </Link>
           </div>
 
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
 
-            {categories.map((category, index) => (
-              <button
+            {categories.map((category) => (
+              <Link
+                to={`/products?category=${encodeURIComponent(category.filter)}`}
                 key={category.name}
                 className="group relative overflow-hidden rounded-2xl bg-white p-6 text-left transition duration-300 hover:-translate-y-1 hover:shadow-xl"
               >
@@ -258,7 +271,7 @@ function Home() {
                 <span className="absolute bottom-5 right-5 text-xs text-gray-300 transition group-hover:text-[#6d5dfc]">
                   →
                 </span>
-              </button>
+              </Link>
             ))}
           </div>
         </section>
@@ -277,57 +290,41 @@ function Home() {
               </h2>
             </div>
 
-            <button className="text-xs font-bold">
+            <Link to="/products" className="text-xs font-bold hover:text-[#6d5dfc] transition">
               View all →
-            </button>
+            </Link>
           </div>
 
           <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
 
             {products.map((product) => (
               <article
-                key={product.id}
-                className="group overflow-hidden rounded-2xl bg-white transition duration-300 hover:-translate-y-1 hover:shadow-xl"
+                key={product._id}
+                className="group overflow-hidden rounded-2xl bg-white transition duration-300 hover:-translate-y-1 shadow-md hover:shadow-xl flex flex-col border border-gray-200"
               >
-
-                <div className="relative aspect-[0.9] overflow-hidden bg-[#f1f1ef]">
-
+                <div className="relative aspect-[4/3] overflow-hidden bg-[#f1f1ef]">
                   <img
                     src={product.image}
                     alt={product.name}
                     className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
                   />
-
-                  <span className="absolute left-3 top-3 rounded-full bg-white px-3 py-1.5 text-[10px] font-black">
-                    {product.discount}
+                  <span className="absolute left-3 top-3 rounded-full bg-white px-3 py-1.5 text-[10px] font-black uppercase shadow-sm">
+                    {product.category}
                   </span>
-
-                  <button className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-white text-lg shadow-sm transition hover:bg-black hover:text-white">
-                    ♡
-                  </button>
-
-                  <button className="absolute bottom-3 left-3 right-3 translate-y-2 rounded-full bg-black py-3 text-xs font-bold text-white opacity-0 transition duration-300 group-hover:translate-y-0 group-hover:opacity-100">
-                    Quick add +
-                  </button>
+                  <Link to={`/products/${product._id}`} className="absolute bottom-3 left-3 right-3 translate-y-4 rounded-xl bg-black py-3 text-center text-xs font-bold text-white opacity-0 transition duration-300 group-hover:translate-y-0 group-hover:opacity-100 hover:bg-[#6d5dfc]">
+                    View Details
+                  </Link>
                 </div>
-
-                <div className="p-4 sm:p-5">
-
+                <div className="p-4 sm:p-5 flex flex-col flex-1 justify-between">
                   <div className="flex items-start justify-between gap-3">
-                    <h3 className="text-sm font-bold">{product.name}</h3>
+                    <h3 className="text-[13px] font-bold line-clamp-2">{product.name}</h3>
+                  </div>
+                  <div className="mt-3 flex items-center justify-between">
+                    <span className="text-base font-black">
+                      ₹{product.price}
+                    </span>
                     <span className="text-[10px] text-gray-400">4.8 ★</span>
                   </div>
-
-                  <div className="mt-3 flex items-center gap-2">
-                    <span className="text-base font-black">
-                      {product.price}
-                    </span>
-
-                    <span className="text-xs text-gray-400 line-through">
-                      {product.oldPrice}
-                    </span>
-                  </div>
-
                 </div>
               </article>
             ))}
@@ -354,9 +351,9 @@ function Home() {
                 disappears.
               </p>
 
-              <button className="mt-7 rounded-full bg-black px-7 py-3.5 text-sm font-bold text-white transition hover:bg-[#6d5dfc]">
+              <Link to="/products" className="inline-block mt-7 rounded-full bg-black px-7 py-3.5 text-sm font-bold text-white transition hover:bg-[#6d5dfc]">
                 Shop the sale →
-              </button>
+              </Link>
             </div>
 
             <div className="absolute -right-20 -top-32 h-[420px] w-[420px] rounded-full border-[70px] border-white/50" />
@@ -450,4 +447,5 @@ function Home() {
 }
 
 export default Home;
+
 

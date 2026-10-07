@@ -1,12 +1,30 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { axiosInstance } from '../axiosCalls/axios.js';
+import toast from 'react-hot-toast';
 
 const ProductDetails = () => {
   const { id } = useParams();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [savingWishlist, setSavingWishlist] = useState(false);
+
+  const handleAddToWishlist = async () => {
+    setSavingWishlist(true);
+    try {
+      await axiosInstance.post(`/wishlist/${id}`);
+      toast.success("Added to Wishlist");
+    } catch (error) {
+      if (error.response?.status === 409) {
+        toast.error("Product already in wishlist");
+      } else {
+        toast.error("Unable to save product. Please try again.");
+      }
+    } finally {
+      setSavingWishlist(false);
+    }
+  };
 
   useEffect(() => {
     const loadProduct = async () => {
@@ -50,13 +68,21 @@ const ProductDetails = () => {
 
   return (
     <div className="min-h-screen bg-[#f7f7f5] text-[#111]">
-      
+
       {/* HEADER NAVBAR*/}
       <header className="sticky top-0 z-50 border-b border-black/[0.06] bg-[#f7f7f5]/95 backdrop-blur-xl">
         <div className="mx-auto flex h-[76px] max-w-[1400px] items-center px-5 sm:px-8">
           <Link to="/" className="text-[25px] font-black tracking-[-0.06em]">
             Shop<span className="text-[#6d5dfc]">Kart</span>
           </Link>
+          <div className="ml-auto flex gap-6 items-center">
+            <Link to="/wishlist" className="text-[13px] font-bold text-gray-700 hover:text-red-500 transition flex items-center gap-1">
+              <span>♡</span> Wishlist
+            </Link>
+            <Link to="/" className="text-[13px] font-semibold text-gray-700 transition hover:text-[#6d5dfc]">
+              Back to Home
+            </Link>
+          </div>
         </div>
       </header>
 
@@ -121,12 +147,21 @@ const ProductDetails = () => {
                 )}
               </div>
 
-              <button
-                disabled={product.stock === 0}
-                className="w-full rounded-full bg-black py-4 text-sm font-bold text-white transition hover:bg-[#6d5dfc] disabled:opacity-50 disabled:cursor-not-allowed hover:disabled:bg-black"
-              >
-                {product.stock === 0 ? "Out of Stock" : "Add to Cart"}
-              </button>
+              <div className="flex gap-4">
+                <button
+                  disabled={product.stock === 0}
+                  className="flex-1 rounded-full bg-black py-4 text-sm font-bold text-white transition hover:bg-[#6d5dfc] disabled:opacity-50 disabled:cursor-not-allowed hover:disabled:bg-black"
+                >
+                  {product.stock === 0 ? "Out of Stock" : "Add to Cart"}
+                </button>
+                <button
+                  onClick={handleAddToWishlist}
+                  disabled={savingWishlist}
+                  className="w-[56px] h-[56px] flex items-center justify-center rounded-full border-2 border-black/10 bg-white text-gray-400 hover:text-red-500 hover:border-red-500 transition disabled:opacity-50 text-xl flex-shrink-0"
+                >
+                  {savingWishlist ? "⏳" : "♡"}
+                </button>
+              </div>
 
               <div className="flex justify-center gap-6 pt-4 text-xs font-semibold text-gray-500">
                 <span className="flex items-center gap-1">🚚 Free Delivery</span>

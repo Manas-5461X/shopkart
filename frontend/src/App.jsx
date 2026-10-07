@@ -6,8 +6,10 @@ import Login from "./pages/Login"
 import { AuthProvider } from "./context/AuthContext"
 import ProtectedRoute from "./components/ProtectedRoute"
 import PublicRoute from "./components/PublicRoute"
-import Products from "./pages/Products"
+import Products from "./pages/products"
 import ProductDetail from "./pages/ProductDetails"
+import Profile from "./pages/Profile"
+import Wishlist from './pages/Wishlist';
 
 
 function App() {
@@ -22,6 +24,8 @@ function App() {
           <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
           <Route path="/products" element={<ProtectedRoute><Products /></ProtectedRoute>} />
           <Route path="/products/:id" element={<ProtectedRoute><ProductDetail /></ProtectedRoute>} />
+          <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+          <Route path="/wishlist" element={<ProtectedRoute><Wishlist /></ProtectedRoute>} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

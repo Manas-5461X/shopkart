@@ -1,15 +1,37 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { axiosInstance } from '../axiosCalls/axios.js';
+import toast from 'react-hot-toast';
 
 const Products = () => {
+  const [searchParams] = useSearchParams();
+  
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
-  const [search, setSearch] = useState('');
-  const [category, setCategory] = useState('');
-  const [sort, setSort] = useState('');
+  const [search, setSearch] = useState(searchParams.get('search') || '');
+  const [category, setCategory] = useState(searchParams.get('category') || '');
+  const [sort, setSort] = useState(searchParams.get('sort') || '');
+
+  const [savingWishlist, setSavingWishlist] = useState(null);
+
+  const handleAddToWishlist = async (e, productId) => {
+    e.preventDefault(); // Prevents navigating to product details link
+    setSavingWishlist(productId);
+    try {
+      await axiosInstance.post(`/wishlist/${productId}`);
+      toast.success("Added to Wishlist"); 
+    } catch (error) {
+      if (error.response?.status === 409) {
+        toast.error("Product already in wishlist");
+      } else {
+        toast.error("Unable to save product. Please try again.");
+      }
+    } finally {
+      setSavingWishlist(null);
+    }
+  };
 
   useEffect(() => {
     const loadProducts = async () => {
@@ -28,8 +50,9 @@ const Products = () => {
       }
     };
     
+    // Add a slight debounce to avoid too many API calls while typing
     const timeoutId = setTimeout(() => {
-        loadProducts();
+      loadProducts();
     }, 300);
     return () => clearTimeout(timeoutId);
   }, [search, category, sort]);
@@ -43,7 +66,10 @@ const Products = () => {
           <Link to="/" className="text-[25px] font-black tracking-[-0.06em]">
             Shop<span className="text-[#6d5dfc]">Kart</span>
           </Link>
-          <div className="ml-auto">
+          <div className="ml-auto flex gap-6 items-center">
+            <Link to="/wishlist" className="text-[13px] font-bold text-gray-700 hover:text-red-500 transition flex items-center gap-1">
+              <span>♡</span> Wishlist
+            </Link>
             <Link to="/" className="text-[13px] font-semibold text-gray-700 transition hover:text-[#6d5dfc]">
               Back to Home
             </Link>
@@ -83,9 +109,10 @@ const Products = () => {
           >
             <option value="">All Categories</option>
             <option value="Electronics">Electronics</option>
-            <option value="Clothing">Clothing</option>
-            <option value="Home Appliances">Home Appliances</option>
+            <option value="Fashion">Fashion</option>
+            <option value="Home">Home</option>
             <option value="Books">Books</option>
+            <option value="Other">Other</option>
           </select>
           
           <select 
@@ -142,6 +169,14 @@ const Products = () => {
                   <Link to={`/products/${product._id}`} className="absolute bottom-4 left-4 right-4 translate-y-4 rounded-xl bg-black py-3.5 text-center text-xs font-bold text-white opacity-0 transition duration-300 group-hover:translate-y-0 group-hover:opacity-100 hover:bg-[#6d5dfc] hover:text-white">
                     View Details
                   </Link>
+
+                  <button 
+                    onClick={(e) => handleAddToWishlist(e, product._id)}
+                    disabled={savingWishlist === product._id}
+                    className="absolute top-4 right-4 bg-white/90 p-2.5 rounded-full shadow-sm hover:bg-red-50 hover:text-red-500 text-gray-400 transition disabled:opacity-50 z-10 flex items-center justify-center text-lg leading-none"
+                  >
+                    {savingWishlist === product._id ? "⏳" : "♡"}
+                  </button>
                 </div>
 
                 <div className="p-5 sm:p-6 flex flex-col flex-1 justify-between border-t border-black/[0.03] bg-gray-50/30">
