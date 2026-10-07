@@ -2,19 +2,38 @@ import React, { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { axiosInstance } from '../axiosCalls/axios.js';
 import toast from 'react-hot-toast';
+import { useCart } from '../context/CartContext.jsx';
 
 const Products = () => {
+  const { cart, cartCount, addToCart, updateQuantity, removeFromCart } = useCart();
   const [searchParams] = useSearchParams();
   
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
   const [search, setSearch] = useState(searchParams.get('search') || '');
   const [category, setCategory] = useState(searchParams.get('category') || '');
   const [sort, setSort] = useState(searchParams.get('sort') || '');
 
+
   const [savingWishlist, setSavingWishlist] = useState(null);
+  const [addingToCart, setAddingToCart] = useState(null);
+
+  const handleAddToCart = async (e, productId) => {
+    e.preventDefault(); // Prevents navigating to product details link
+    setAddingToCart(productId);
+    await addToCart(productId);
+    setAddingToCart(null);
+  };
+
+  const handleUpdateQuantity = async (e, productId, quantity) => {
+    e.preventDefault();
+    if (quantity === 0) {
+      await removeFromCart(productId);
+    } else {
+      await updateQuantity(productId, quantity);
+    }
+  };
 
   const handleAddToWishlist = async (e, productId) => {
     e.preventDefault(); // Prevents navigating to product details link
@@ -67,11 +86,19 @@ const Products = () => {
             Shop<span className="text-[#6d5dfc]">Kart</span>
           </Link>
           <div className="ml-auto flex gap-6 items-center">
-            <Link to="/wishlist" className="text-[13px] font-bold text-gray-700 hover:text-red-500 transition flex items-center gap-1">
-              <span>♡</span> Wishlist
-            </Link>
             <Link to="/" className="text-[13px] font-semibold text-gray-700 transition hover:text-[#6d5dfc]">
-              Back to Home
+              Home
+            </Link>
+            <Link to="/wishlist" className="text-[13px] font-semibold text-gray-700 transition hover:text-[#6d5dfc]">
+              Wishlist
+            </Link>
+            <Link to="/cart" className="relative text-[20px] transition hover:scale-105">
+              🛒
+              {cartCount > 0 && (
+                <span className="absolute -right-2 -top-2 flex h-[17px] min-w-[17px] items-center justify-center rounded-full bg-[#6d5dfc] px-1 text-[9px] font-bold text-white">
+                  {cartCount}
+                </span>
+              )}
             </Link>
           </div>
         </div>
@@ -151,24 +178,27 @@ const Products = () => {
             {products.map((product) => (
               <article
                 key={product._id}
-                className="group overflow-hidden rounded-2xl bg-white transition duration-300 hover:-translate-y-1 shadow-md hover:shadow-xl flex flex-col border border-gray-200"
+                className="group relative overflow-hidden rounded-2xl bg-white transition duration-300 hover:-translate-y-1 shadow-md hover:shadow-xl flex flex-col border border-gray-200"
               >
+                <Link to={`/products/${product._id}`} className="absolute inset-0 z-0">
+                  <span className="sr-only">View Details</span>
+                </Link>
+
                 <div className="relative aspect-[4/3] overflow-hidden bg-[#f1f1ef]">
                   <img
                     src={product.image}
                     alt={product.name}
                     className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
                   />
+                  <span className="absolute left-4 top-4 rounded-full bg-white px-3 py-1.5 text-[10px] font-black uppercase shadow-sm z-10 text-gray-700">
+                    {product.category}
+                  </span>
                   
                   {product.stock === 0 && (
-                    <span className="absolute left-4 top-4 rounded-full bg-red-100 text-red-700 px-3 py-1.5 text-[10px] font-black uppercase tracking-wider shadow-sm">
+                    <span className="absolute left-4 bottom-4 rounded-full bg-red-100 text-red-700 px-3 py-1.5 text-[10px] font-black uppercase tracking-wider shadow-sm z-10">
                       Out of stock
                     </span>
                   )}
-                  
-                  <Link to={`/products/${product._id}`} className="absolute bottom-4 left-4 right-4 translate-y-4 rounded-xl bg-black py-3.5 text-center text-xs font-bold text-white opacity-0 transition duration-300 group-hover:translate-y-0 group-hover:opacity-100 hover:bg-[#6d5dfc] hover:text-white">
-                    View Details
-                  </Link>
 
                   <button 
                     onClick={(e) => handleAddToWishlist(e, product._id)}
@@ -177,21 +207,74 @@ const Products = () => {
                   >
                     {savingWishlist === product._id ? "⏳" : "♡"}
                   </button>
+
+                  <Link to={`/products/${product._id}`} className="absolute inset-0 z-0">
+                    <span className="sr-only">View Details</span>
+                  </Link>
                 </div>
 
                 <div className="p-5 sm:p-6 flex flex-col flex-1 justify-between border-t border-black/[0.03] bg-gray-50/30">
                   <div>
-                    <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-gray-400 mb-1.5 line-clamp-1">{product.category}</p>
                     <h3 className="text-[15px] font-bold line-clamp-2 leading-snug text-gray-900">{product.name}</h3>
                   </div>
                   
-                  <div className="mt-4 flex flex-col gap-1.5">
-                    <span className="text-lg font-black text-[#111]">₹{product.price}</span>
-                    {product.stock > 0 ? (
-                      <span className="text-[11px] font-medium text-green-600">{product.stock} units left</span>
-                    ) : (
-                      <span className="text-[11px] font-medium text-red-500">Currently unavailable</span>
-                    )}
+                  <div className="mt-4 flex items-center justify-between">
+                    <div className="flex flex-col gap-1.5">
+                      <span className="text-lg font-black text-[#111]">₹{product.price}</span>
+                      {product.stock > 0 ? (
+                        <span className="text-[11px] font-medium text-green-600">{product.stock} units left</span>
+                      ) : (
+                        <span className="text-[11px] font-medium text-red-500">Currently unavailable</span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-3">
+                      {(() => {
+                        const cartItem = cart.find(item => item.product._id === product._id);
+                        if (cartItem) {
+                          return (
+                            <div className="relative z-10 flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-1.5 py-1 shadow-sm shrink-0">
+                              <button
+                                onClick={(e) => handleUpdateQuantity(e, product._id, cartItem.quantity - 1)}
+                                className="flex h-7 w-7 items-center justify-center rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 text-sm font-bold"
+                              >
+                                -
+                              </button>
+                              <span className="text-xs font-bold text-gray-800 w-3 text-center">
+                                {cartItem.quantity}
+                              </span>
+                              <button
+                                onClick={(e) => handleUpdateQuantity(e, product._id, cartItem.quantity + 1)}
+                                disabled={cartItem.quantity >= product.stock}
+                                className="flex h-7 w-7 items-center justify-center rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 disabled:opacity-50 text-sm font-bold"
+                              >
+                                +
+                              </button>
+                              <span className="text-[17px] ml-1 mr-1">🛒</span>
+                            </div>
+                          );
+                        }
+                        return (
+                          <button 
+                            onClick={(e) => handleAddToCart(e, product._id)}
+                            disabled={addingToCart === product._id || product.stock === 0}
+                            className="relative z-10 flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-gray-700 hover:bg-[#6d5dfc] hover:text-white transition disabled:opacity-50 text-[17px] leading-none shrink-0"
+                            title="Add to Cart"
+                          >
+                            {addingToCart === product._id ? "⏳" : "🛒"}
+                          </button>
+                        );
+                      })()}
+                      <Link 
+                        to={`/products/${product._id}`} 
+                        className="relative z-10 flex h-9 w-9 items-center justify-center rounded-full bg-gray-50 text-gray-400 transition hover:bg-gray-100 hover:text-blue-500 shrink-0"
+                        title="View Details"
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <line x1="7" y1="17" x2="17" y2="7"></line>
+                          <polyline points="7 7 17 7 17 17"></polyline>
+                        </svg>
+                      </Link>
+                    </div>
                   </div>
                 </div>
               </article>

@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { AuthContext } from '../context/AuthContext';
 import { axiosInstance } from '../axiosCalls/axios.js';
 import toast from 'react-hot-toast';
+import { useCart } from '../context/CartContext';
 
 const categories = [
   { name: "Electronics", filter: "Electronics", icon: "◉" },
@@ -16,7 +17,12 @@ function Home() {
   const navigate = useNavigate();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const { checkAuth, user } = useContext(AuthContext);
+  const { cart, cartCount, addToCart, updateQuantity, removeFromCart } = useCart();
   const [products, setProducts] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [showAnnouncement, setShowAnnouncement] = useState(true);
+  const [savingWishlist, setSavingWishlist] = useState(null);
+  const [addingToCart, setAddingToCart] = useState(null);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -56,13 +62,70 @@ function Home() {
     }
   };
 
+  const handleAddToWishlist = async (e, productId) => {
+    e.preventDefault(); // Prevents navigating to product details link
+    setSavingWishlist(productId);
+    try {
+      await axiosInstance.post(`/wishlist/${productId}`);
+      toast.success("Added to Wishlist"); 
+    } catch (error) {
+      if (error.response?.status === 409) {
+        toast.error("Product already in wishlist");
+      } else {
+        toast.error("Unable to save product. Please try again.");
+      }
+    } finally {
+      setSavingWishlist(null);
+    }
+  };
+
+  const handleAddToCart = async (e, productId) => {
+    e.preventDefault(); // Prevents navigating to product details link
+    setAddingToCart(productId);
+    await addToCart(productId);
+    setAddingToCart(null);
+  };
+
+  const handleUpdateQuantity = async (e, productId, quantity) => {
+    e.preventDefault();
+    if (quantity === 0) {
+      await removeFromCart(productId);
+    } else {
+      await updateQuantity(productId, quantity);
+    }
+  };
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (searchTerm.trim()) {
+      navigate(`/products?search=${encodeURIComponent(searchTerm.trim())}`);
+    } else {
+      navigate('/products');
+    }
+  };
+
+  const scrollToSection = (id) => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#f7f7f5] text-[#111]">
 
       {/* TOP ANNOUNCEMENT */}
-      <div className="bg-[#111] px-4 py-2 text-center text-[11px] font-medium tracking-[0.18em] text-white">
-        FREE SHIPPING ON ORDERS OVER ₹999
-      </div>
+      {showAnnouncement && (
+        <div className="bg-[#111] px-4 py-2 text-center text-[11px] font-medium tracking-[0.18em] text-white relative">
+          FREE SHIPPING ON ORDERS OVER ₹999
+          <button 
+            onClick={() => setShowAnnouncement(false)}
+            className="absolute right-4 top-1/2 -translate-y-1/2 text-white/50 hover:text-white transition text-sm font-black"
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       {/* NAVBAR */}
       <header className="sticky top-0 z-50 border-b border-black/[0.06] bg-[#f7f7f5]/95 backdrop-blur-xl">
@@ -73,19 +136,23 @@ function Home() {
           </Link>
 
           <nav className="ml-14 hidden items-center gap-9 text-[13px] font-medium lg:flex">
-            <Link to="/products" className="transition hover:text-[#6d5dfc]">New Arrivals</Link>
-            <Link to="/products" className="transition hover:text-[#6d5dfc]">Categories</Link>
-            <Link to="/products" className="transition hover:text-[#6d5dfc]">Best Sellers</Link>
-            <Link to="/products" className="font-semibold text-[#6d5dfc]">Deals</Link>
+            <button onClick={() => scrollToSection('trending')} className="transition hover:text-[#6d5dfc]">Trending</button>
+            <button onClick={() => scrollToSection('offers')} className="font-semibold text-[#6d5dfc] transition hover:text-purple-600">Offers</button>
           </nav>
 
           <div className="ml-auto flex items-center gap-3 sm:gap-6">
 
             {/* SEARCH */}
-            <button className="hidden items-center gap-2 rounded-full border border-black/10 bg-white px-4 py-2.5 text-sm text-gray-500 transition hover:border-black/20 md:flex">
+            <form onSubmit={handleSearch} className="hidden items-center gap-2 rounded-full border border-black/10 bg-white px-4 py-2 text-sm text-gray-500 transition hover:border-black/20 md:flex">
               <span>⌕</span>
-              <span>Search products</span>
-            </button>
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search products"
+                className="bg-transparent outline-none w-48 text-gray-700 placeholder-gray-400"
+              />
+            </form>
 
             {user ? (
               <div className="group relative z-50">
@@ -134,16 +201,18 @@ function Home() {
               </>
             )}
 
-            <button className="relative text-[21px] transition hover:scale-105">
+            <Link to="/wishlist" className="relative text-[21px] transition hover:scale-105">
               ♡
-            </button>
+            </Link>
 
-            <button className="relative text-[20px] transition hover:scale-105">
+            <Link to="/cart" className="relative text-[20px] transition hover:scale-105">
               🛒
-              <span className="absolute -right-2 -top-2 flex h-[17px] min-w-[17px] items-center justify-center rounded-full bg-[#6d5dfc] px-1 text-[9px] font-bold text-white">
-                2
-              </span>
-            </button>
+              {cartCount > 0 && (
+                <span className="absolute -right-2 -top-2 flex h-[17px] min-w-[17px] items-center justify-center rounded-full bg-[#6d5dfc] px-1 text-[9px] font-bold text-white">
+                  {cartCount}
+                </span>
+              )}
+            </Link>
 
             <button className="text-xl lg:hidden">☰</button>
           </div>
@@ -277,7 +346,7 @@ function Home() {
         </section>
 
         {/* PRODUCTS */}
-        <section className="mx-auto max-w-[1400px] px-5 pb-16 sm:px-8">
+        <section id="trending" className="mx-auto max-w-[1400px] px-5 pb-16 sm:px-8">
 
           <div className="mb-8 flex items-end justify-between">
             <div>
@@ -300,19 +369,30 @@ function Home() {
             {products.map((product) => (
               <article
                 key={product._id}
-                className="group overflow-hidden rounded-2xl bg-white transition duration-300 hover:-translate-y-1 shadow-md hover:shadow-xl flex flex-col border border-gray-200"
+                className="group relative overflow-hidden rounded-2xl bg-white transition duration-300 hover:-translate-y-1 shadow-md hover:shadow-xl flex flex-col border border-gray-200"
               >
+                <Link to={`/products/${product._id}`} className="absolute inset-0 z-0">
+                  <span className="sr-only">View Details</span>
+                </Link>
+
                 <div className="relative aspect-[4/3] overflow-hidden bg-[#f1f1ef]">
                   <img
                     src={product.image}
                     alt={product.name}
                     className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
                   />
-                  <span className="absolute left-3 top-3 rounded-full bg-white px-3 py-1.5 text-[10px] font-black uppercase shadow-sm">
+                  <span className="absolute left-3 top-3 rounded-full bg-white px-3 py-1.5 text-[10px] font-black uppercase shadow-sm z-10">
                     {product.category}
                   </span>
-                  <Link to={`/products/${product._id}`} className="absolute bottom-3 left-3 right-3 translate-y-4 rounded-xl bg-black py-3 text-center text-xs font-bold text-white opacity-0 transition duration-300 group-hover:translate-y-0 group-hover:opacity-100 hover:bg-[#6d5dfc]">
-                    View Details
+                  <button 
+                    onClick={(e) => handleAddToWishlist(e, product._id)}
+                    disabled={savingWishlist === product._id}
+                    className="absolute top-3 right-3 bg-white/90 p-2 rounded-full shadow-sm hover:bg-red-50 hover:text-red-500 text-gray-400 transition disabled:opacity-50 z-10 flex items-center justify-center text-sm leading-none"
+                  >
+                    {savingWishlist === product._id ? "⏳" : "♡"}
+                  </button>
+                  <Link to={`/products/${product._id}`} className="absolute inset-0 z-0">
+                    <span className="sr-only">View Details</span>
                   </Link>
                 </div>
                 <div className="p-4 sm:p-5 flex flex-col flex-1 justify-between">
@@ -323,7 +403,54 @@ function Home() {
                     <span className="text-base font-black">
                       ₹{product.price}
                     </span>
-                    <span className="text-[10px] text-gray-400">4.8 ★</span>
+                    <div className="flex items-center gap-3">
+                      {(() => {
+                        const cartItem = cart.find(item => item.product._id === product._id);
+                        if (cartItem) {
+                          return (
+                            <div className="relative z-10 flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-1.5 py-1 shadow-sm">
+                              <button
+                                onClick={(e) => handleUpdateQuantity(e, product._id, cartItem.quantity - 1)}
+                                className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 text-sm font-bold"
+                              >
+                                -
+                              </button>
+                              <span className="text-xs font-bold text-gray-800 w-3 text-center">
+                                {cartItem.quantity}
+                              </span>
+                              <button
+                                onClick={(e) => handleUpdateQuantity(e, product._id, cartItem.quantity + 1)}
+                                disabled={cartItem.quantity >= product.stock}
+                                className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 disabled:opacity-50 text-sm font-bold"
+                              >
+                                +
+                              </button>
+                              <span className="text-[15px] ml-1 mr-1">🛒</span>
+                            </div>
+                          );
+                        }
+                        return (
+                          <button 
+                            onClick={(e) => handleAddToCart(e, product._id)}
+                            disabled={addingToCart === product._id || product.stock === 0}
+                            className="relative z-10 flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-gray-700 hover:bg-[#6d5dfc] hover:text-white transition disabled:opacity-50 text-[15px] leading-none"
+                            title="Add to Cart"
+                          >
+                            {addingToCart === product._id ? "⏳" : "🛒"}
+                          </button>
+                        );
+                      })()}
+                      <Link 
+                        to={`/products/${product._id}`} 
+                        className="relative z-10 flex h-8 w-8 items-center justify-center rounded-full bg-gray-50 text-gray-400 transition hover:bg-gray-100 hover:text-blue-500"
+                        title="View Details"
+                      >
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <line x1="7" y1="17" x2="17" y2="7"></line>
+                          <polyline points="7 7 17 7 17 17"></polyline>
+                        </svg>
+                      </Link>
+                    </div>
                   </div>
                 </div>
               </article>
@@ -332,7 +459,7 @@ function Home() {
         </section>
 
         {/* BIG PROMO */}
-        <section className="mx-auto max-w-[1400px] px-5 pb-20 sm:px-8">
+        <section id="offers" className="mx-auto max-w-[1400px] px-5 pb-20 sm:px-8">
           <div className="relative overflow-hidden rounded-[28px] bg-[#e8e5ff] px-7 py-12 sm:px-12 lg:px-16 lg:py-16">
 
             <div className="relative z-10 max-w-xl">
@@ -386,11 +513,11 @@ function Home() {
                 Shop
               </h3>
 
-              <div className="mt-5 space-y-3 text-sm text-white/50">
-                <p className="cursor-pointer hover:text-white">New arrivals</p>
-                <p className="cursor-pointer hover:text-white">Categories</p>
-                <p className="cursor-pointer hover:text-white">Best sellers</p>
-                <p className="cursor-pointer hover:text-white">Deals</p>
+              <div className="mt-5 flex flex-col space-y-3 text-sm text-white/50">
+                <Link to="/products" className="hover:text-white transition">New arrivals</Link>
+                <Link to="/products" className="hover:text-white transition">Categories</Link>
+                <Link to="/products" className="hover:text-white transition">Best sellers</Link>
+                <Link to="/products" className="hover:text-white transition">Deals</Link>
               </div>
             </div>
 

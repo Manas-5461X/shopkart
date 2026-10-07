@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { axiosInstance } from '../axiosCalls/axios.js';
 import toast from 'react-hot-toast';
+import { useCart } from '../context/CartContext.jsx';
 
 const ProductDetails = () => {
   const { id } = useParams();
@@ -9,6 +10,16 @@ const ProductDetails = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [savingWishlist, setSavingWishlist] = useState(false);
+  const { addToCart, cartCount, cart, updateQuantity, removeFromCart } = useCart();
+  const [adding, setAdding] = useState(false);
+
+  const cartItem = cart.find(item => item.product._id === id);
+
+  const handleAddToCart = async () => {
+    setAdding(true);
+    await addToCart(product._id);
+    setAdding(false);
+  };
 
   const handleAddToWishlist = async () => {
     setSavingWishlist(true);
@@ -79,6 +90,9 @@ const ProductDetails = () => {
             <Link to="/wishlist" className="text-[13px] font-bold text-gray-700 hover:text-red-500 transition flex items-center gap-1">
               <span>♡</span> Wishlist
             </Link>
+            <Link to="/cart" className="text-[13px] font-bold text-[#6d5dfc] transition flex items-center gap-1 bg-white shadow-sm border border-gray-100 px-3 py-1.5 rounded-full">
+              🛒 Cart {cartCount > 0 && <span className="bg-[#6d5dfc] text-white text-[10px] px-1.5 py-0.5 rounded-full">{cartCount}</span>}
+            </Link>
             <Link to="/" className="text-[13px] font-semibold text-gray-700 transition hover:text-[#6d5dfc]">
               Back to Home
             </Link>
@@ -86,7 +100,7 @@ const ProductDetails = () => {
         </div>
       </header>
 
-      <main className="mx-auto max-w-[1200px] px-5 py-10 sm:px-8 lg:py-16">
+      <main className="mx-auto max-w-[1000px] px-5 py-8 sm:px-8 lg:py-10">
         <Link
           to="/products"
           className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-gray-500 transition hover:text-[#6d5dfc] mb-10"
@@ -97,11 +111,11 @@ const ProductDetails = () => {
         <div className="grid gap-10 md:grid-cols-2 lg:gap-16 items-start">
 
           {/* Image Gallery Side */}
-          <div className="relative overflow-hidden rounded-[28px] bg-[#f1f1ef] p-4 sm:p-8">
+          <div className="relative overflow-hidden rounded-[28px] bg-[#f1f1ef] p-6">
             <img
               src={product.image}
               alt={product.name}
-              className="w-full h-auto object-contain aspect-square rounded-xl shadow-sm mix-blend-multiply"
+              className="w-full h-auto object-contain aspect-[4/3] rounded-xl shadow-sm mix-blend-multiply"
             />
             {product.stock === 0 && (
               <span className="absolute top-6 left-6 rounded-full bg-red-100 px-4 py-2 text-xs font-black uppercase tracking-wider text-red-700">
@@ -116,7 +130,7 @@ const ProductDetails = () => {
               {product.category}
             </p>
 
-            <h1 className="text-3xl font-black tracking-[-0.04em] sm:text-5xl mb-4 leading-tight">
+            <h1 className="text-3xl font-black tracking-[-0.04em] sm:text-4xl mb-4 leading-tight">
               {product.name}
             </h1>
 
@@ -147,13 +161,53 @@ const ProductDetails = () => {
                 )}
               </div>
 
-              <div className="flex gap-4">
-                <button
-                  disabled={product.stock === 0}
-                  className="flex-1 rounded-full bg-black py-4 text-sm font-bold text-white transition hover:bg-[#6d5dfc] disabled:opacity-50 disabled:cursor-not-allowed hover:disabled:bg-black"
-                >
-                  {product.stock === 0 ? "Out of Stock" : "Add to Cart"}
-                </button>
+              <div className="flex gap-4 h-[56px]">
+                {cartItem ? (
+                  <div className="flex-1 flex gap-3 h-[56px]">
+                    <div className="flex items-center justify-between bg-black rounded-full px-1.5 w-[130px] shrink-0">
+                      <button 
+                        onClick={() => {
+                          if (cartItem.quantity === 1) {
+                            removeFromCart(product._id);
+                          } else {
+                            updateQuantity(product._id, cartItem.quantity - 1);
+                          }
+                        }}
+                        className="h-11 w-11 rounded-full flex items-center justify-center text-white hover:bg-[#6d5dfc] transition font-black text-xl"
+                      >
+                        -
+                      </button>
+                      <span className="font-black text-white select-none text-sm w-4 text-center">{cartItem.quantity}</span>
+                      <button 
+                        onClick={() => {
+                          if (cartItem.quantity >= product.stock) {
+                            toast.error("Cannot add more products than the available quantity");
+                          } else {
+                            updateQuantity(product._id, cartItem.quantity + 1);
+                          }
+                        }}
+                        className="h-11 w-11 rounded-full flex items-center justify-center text-white hover:bg-[#6d5dfc] transition font-black text-xl"
+                      >
+                        +
+                      </button>
+                    </div>
+                    
+                    <Link
+                      to="/cart"
+                      className="flex-1 flex items-center justify-center rounded-full bg-[#6d5dfc] text-sm font-bold text-white transition hover:bg-purple-600 shadow-lg hover:shadow-xl"
+                    >
+                      View Cart →
+                    </Link>
+                  </div>
+                ) : (
+                  <button
+                    onClick={handleAddToCart}
+                    disabled={product.stock === 0 || adding}
+                    className="flex-1 rounded-full bg-black py-4 text-sm font-bold text-white transition hover:bg-[#6d5dfc] disabled:opacity-50 disabled:cursor-not-allowed hover:disabled:bg-black h-full"
+                  >
+                    {adding ? "Adding..." : product.stock === 0 ? "Out of Stock" : "Add to Cart"}
+                  </button>
+                )}
                 <button
                   onClick={handleAddToWishlist}
                   disabled={savingWishlist}

@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { axiosInstance } from '../axiosCalls/axios.js';
 import toast from 'react-hot-toast';
+import { useCart } from '../context/CartContext';
 
 const Wishlist = () => {
   const [wishlist, setWishlist] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { cartCount } = useCart();
 
   useEffect(() => {
     fetchWishlist();
@@ -42,8 +44,19 @@ const Wishlist = () => {
           Shop<span className="text-[#6d5dfc]">Kart</span>
         </Link>
         <div className="ml-auto flex gap-6 items-center">
+          <Link to="/" className="text-[13px] font-semibold text-gray-700 transition hover:text-[#6d5dfc]">
+            Home
+          </Link>
           <Link to="/products" className="text-[13px] font-semibold text-gray-700 transition hover:text-[#6d5dfc]">
-            Back to Products
+            Products
+          </Link>
+          <Link to="/cart" className="relative text-[20px] transition hover:scale-105">
+            🛒
+            {cartCount > 0 && (
+              <span className="absolute -right-2 -top-2 flex h-[17px] min-w-[17px] items-center justify-center rounded-full bg-[#6d5dfc] px-1 text-[9px] font-bold text-white">
+                {cartCount}
+              </span>
+            )}
           </Link>
         </div>
       </div>
@@ -81,7 +94,7 @@ const Wishlist = () => {
         <div className="relative mb-10 group">
           <div className="absolute inset-0 bg-red-400 rounded-full blur-2xl opacity-40 group-hover:opacity-60 transition-opacity duration-700"></div>
           <div className="text-[120px] leading-none transform transition duration-500 hover:scale-110 relative z-10 animate-bounce" style={{ animationDuration: '3s' }}>
-            🛒
+            🤍
           </div>
         </div>
 

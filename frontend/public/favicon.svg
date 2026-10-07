@@ -1,0 +1,15 @@
+<svg viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Premium black background -->
+  <rect width="128" height="128" rx="32" fill="#111111"/>
+  
+  <!-- Purple Handle -->
+  <path d="M44 60V44C44 32.9543 52.9543 24 64 24C75.0457 24 84 32.9543 84 44V60" stroke="#6d5dfc" stroke-width="10" stroke-linecap="round"/>
+  
+  <!-- White Bag Body -->
+  <rect x="28" y="56" width="72" height="52" rx="12" fill="#ffffff"/>
+  
+  <!-- Purple Accents -->
+  <circle cx="48" cy="72" r="5" fill="#6d5dfc"/>
+  <circle cx="80" cy="72" r="5" fill="#6d5dfc"/>
+  <rect x="54" y="70" width="20" height="4" rx="2" fill="#6d5dfc"/>
+</svg>

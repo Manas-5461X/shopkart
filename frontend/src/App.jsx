@@ -6,17 +6,20 @@ import Login from "./pages/Login"
 import { AuthProvider } from "./context/AuthContext"
 import ProtectedRoute from "./components/ProtectedRoute"
 import PublicRoute from "./components/PublicRoute"
-import Products from "./pages/products"
+import Products from "./pages/Products"
 import ProductDetail from "./pages/ProductDetails"
 import Profile from "./pages/Profile"
 import Wishlist from './pages/Wishlist';
-
+import Cart from './pages/Cart';
+import { CartProvider } from './context/CartContext';
+import NotFound from './pages/NotFound';
 
 function App() {
 
   return (
     <AuthProvider>
-      <BrowserRouter>
+      <CartProvider>
+       <BrowserRouter>
         <Toaster position="top-right" reverseOrder={false} />
         <Routes>
           <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
@@ -26,8 +29,11 @@ function App() {
           <Route path="/products/:id" element={<ProtectedRoute><ProductDetail /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
           <Route path="/wishlist" element={<ProtectedRoute><Wishlist /></ProtectedRoute>} />
+          <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
-      </BrowserRouter>
+       </BrowserRouter>
+      </CartProvider>
     </AuthProvider>
   )
 }

@@ -19,11 +19,25 @@ const customerSchema = new mongoose.Schema({
         required: true
     },
     wishlist: [
-    {
-      type: mongoose.Schema.Types.ObjectId, // storing object id instead of whole product database remains normalized 
-      ref: 'Product'
-    }
-  ],
+        {
+            type: mongoose.Schema.Types.ObjectId, // storing object id instead of whole product database remains normalized 
+            ref: 'Product'
+        }
+    ],
+    cart: [
+        {
+            product: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'Product',
+                required: true
+            },
+            quantity: {
+                type: Number,
+                default: 1,
+                min: 1
+            }
+        }
+    ],
 }, { timestamps: true })
 
 export const Customer = mongoose.model("Customer", customerSchema)

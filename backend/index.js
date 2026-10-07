@@ -7,6 +7,8 @@ import cors from 'cors'
 import customerRouter from "./routes/customer.routes.js";
 import productRouter from "./routes/product.routes.js";
 import wishlistRouter from './routes/wishlist.routes.js';
+import cartRouter from './routes/cart.routes.js';
+
 
 // to fis the dns issue 
 dns.setServers([
@@ -34,6 +36,7 @@ app.use(cookieParser())
 app.use("/customers", customerRouter);
 app.use("/products", productRouter);
 app.use("/wishlist", wishlistRouter);
+app.use("/cart", cartRouter);
 
 mongoose.connect(process.env.dbUrl).then(() => {
     console.log("DB Connected")
