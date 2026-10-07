@@ -21,7 +21,7 @@ function App() {
     <AuthProvider>
       <CartProvider>
        <BrowserRouter>
-        <Toaster position="top-right" reverseOrder={false} />
+        <Toaster position="bottom-right" reverseOrder={false} />
         <div className="min-h-screen flex flex-col">
           <Routes>
             <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />

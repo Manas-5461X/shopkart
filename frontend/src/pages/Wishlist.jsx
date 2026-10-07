@@ -8,7 +8,24 @@ const Wishlist = () => {
   const [wishlist, setWishlist] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { cartCount } = useCart();
+  const { cart, cartCount, addToCart, updateQuantity, removeFromCart } = useCart();
+  const [addingToCart, setAddingToCart] = useState(null);
+
+  const handleAddToCart = async (e, productId) => {
+    e.preventDefault();
+    setAddingToCart(productId);
+    await addToCart(productId);
+    setAddingToCart(null);
+  };
+
+  const handleUpdateQuantity = async (e, productId, quantity) => {
+    e.preventDefault();
+    if (quantity === 0) {
+      await removeFromCart(productId);
+    } else {
+      await updateQuantity(productId, quantity);
+    }
+  };
 
   useEffect(() => {
     fetchWishlist();
@@ -162,8 +179,8 @@ const Wishlist = () => {
                   </span>
                 )}
                 
-                <Link to={`/products/${product._id}`} className="absolute bottom-4 left-4 right-4 translate-y-4 rounded-xl bg-black py-3.5 text-center text-xs font-bold text-white opacity-0 transition duration-300 group-hover:translate-y-0 group-hover:opacity-100 hover:bg-[#6d5dfc] hover:text-white">
-                  View Details
+                <Link to={`/products/${product._id}`} className="absolute inset-0 z-0">
+                  <span className="sr-only">View Details</span>
                 </Link>
 
                 <button 
@@ -174,19 +191,62 @@ const Wishlist = () => {
                 </button>
               </div>
 
-              <div className="p-5 sm:p-6 flex flex-col flex-1 justify-between border-t border-black/[0.03] bg-gray-50/30">
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-gray-400 mb-1.5 line-clamp-1">{product.category}</p>
-                  <h3 className="text-[15px] font-bold line-clamp-2 leading-snug text-gray-900">{product.name}</h3>
+              <div className="p-4 sm:p-5 flex flex-col flex-1 justify-between">
+                <div className="flex items-start justify-between gap-3">
+                  <h3 className="text-[13px] font-bold line-clamp-2">{product.name}</h3>
                 </div>
-                
-                <div className="mt-4 flex flex-col gap-1.5">
-                  <span className="text-lg font-black text-[#111]">₹{product.price}</span>
-                  {product.stock > 0 ? (
-                    <span className="text-[11px] font-medium text-green-600">{product.stock} units left</span>
-                  ) : (
-                    <span className="text-[11px] font-medium text-red-500">Currently unavailable</span>
-                  )}
+                <div className="mt-3 flex items-center justify-between">
+                  <span className="text-base font-black">
+                    ₹{product.price}
+                  </span>
+                  <div className="flex items-center gap-3">
+                    {(() => {
+                      const cartItem = cart.find(item => item.product._id === product._id);
+                      if (cartItem) {
+                        return (
+                          <div className="relative z-10 flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-1.5 py-1 shadow-sm">
+                            <button
+                              onClick={(e) => handleUpdateQuantity(e, product._id, cartItem.quantity - 1)}
+                              className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 text-sm font-bold"
+                            >
+                              -
+                            </button>
+                            <span className="text-xs font-bold text-gray-800 w-3 text-center">
+                              {cartItem.quantity}
+                            </span>
+                            <button
+                              onClick={(e) => handleUpdateQuantity(e, product._id, cartItem.quantity + 1)}
+                              disabled={cartItem.quantity >= product.stock}
+                              className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 disabled:opacity-50 text-sm font-bold"
+                            >
+                              +
+                            </button>
+                            <span className="text-[15px] ml-1 mr-1">🛒</span>
+                          </div>
+                        );
+                      }
+                      return (
+                        <button 
+                          onClick={(e) => handleAddToCart(e, product._id)}
+                          disabled={addingToCart === product._id || product.stock === 0}
+                          className="relative z-10 flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-gray-700 hover:bg-[#6d5dfc] hover:text-white transition disabled:opacity-50 text-[15px] leading-none"
+                          title="Add to Cart"
+                        >
+                          {addingToCart === product._id ? "⏳" : "🛒"}
+                        </button>
+                      );
+                    })()}
+                    <Link 
+                      to={`/products/${product._id}`} 
+                      className="relative z-10 flex h-8 w-8 items-center justify-center rounded-full bg-gray-50 text-gray-400 transition hover:bg-gray-100 hover:text-blue-500"
+                      title="View Details"
+                    >
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="7" y1="17" x2="17" y2="7"></line>
+                        <polyline points="7 7 17 7 17 17"></polyline>
+                      </svg>
+                    </Link>
+                  </div>
                 </div>
               </div>
             </article>

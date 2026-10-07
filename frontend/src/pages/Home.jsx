@@ -26,6 +26,7 @@ function Home() {
   const [animateBadge, setAnimateBadge] = useState(false);
   const [prevCartCount, setPrevCartCount] = useState(cartCount);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [wishlistItems, setWishlistItems] = useState([]);
 
   useEffect(() => {
     if (cartCount > prevCartCount) {
@@ -44,8 +45,19 @@ function Home() {
         console.error("Error fetching products for home page", error);
       }
     };
+    const fetchWishlist = async () => {
+      if (user) {
+        try {
+          const res = await axiosInstance.get('/wishlist');
+          setWishlistItems(res.data.wishlist.map(item => item._id || item));
+        } catch (error) {
+          console.error("Error fetching wishlist", error);
+        }
+      }
+    };
     fetchProducts();
-  }, []);
+    fetchWishlist();
+  }, [user]);
 
   const handleLogout = async () => {
     try {
@@ -72,18 +84,29 @@ function Home() {
     }
   };
 
-  const handleAddToWishlist = async (e, productId) => {
+  const handleToggleWishlist = async (e, productId) => {
     e.preventDefault(); // Prevents navigating to product details link
+    if (!user) {
+      toast.error("Please login to add to wishlist");
+      navigate("/login");
+      return;
+    }
+    
     setSavingWishlist(productId);
+    const isWishlisted = wishlistItems.includes(productId);
+    
     try {
-      await axiosInstance.post(`/wishlist/${productId}`);
-      toast.success("Added to Wishlist"); 
-    } catch (error) {
-      if (error.response?.status === 409) {
-        toast.error("Product already in wishlist");
+      if (isWishlisted) {
+        await axiosInstance.delete(`/wishlist/${productId}`);
+        setWishlistItems(prev => prev.filter(id => id !== productId));
+        toast.success("Removed from Wishlist");
       } else {
-        toast.error("Unable to save product. Please try again.");
+        await axiosInstance.post(`/wishlist/${productId}`);
+        setWishlistItems(prev => [...prev, productId]);
+        toast.success("Added to Wishlist"); 
       }
+    } catch (error) {
+      toast.error("Unable to update wishlist. Please try again.");
     } finally {
       setSavingWishlist(null);
     }
@@ -435,11 +458,15 @@ function Home() {
                     {product.category}
                   </span>
                   <button 
-                    onClick={(e) => handleAddToWishlist(e, product._id)}
+                    onClick={(e) => handleToggleWishlist(e, product._id)}
                     disabled={savingWishlist === product._id}
                     className="absolute top-3 right-3 bg-white/90 p-2 rounded-full shadow-sm hover:bg-red-50 hover:text-red-500 text-gray-400 transition disabled:opacity-50 z-10 flex items-center justify-center text-sm leading-none"
                   >
-                    {savingWishlist === product._id ? "⏳" : "♡"}
+                    {savingWishlist === product._id ? "⏳" : (
+                      <span className={`${wishlistItems.includes(product._id) ? 'text-red-500' : ''}`}>
+                        {wishlistItems.includes(product._id) ? '♥' : '♡'}
+                      </span>
+                    )}
                   </button>
                   <Link to={`/products/${product._id}`} className="absolute inset-0 z-0">
                     <span className="sr-only">View Details</span>
