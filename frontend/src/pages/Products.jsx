@@ -18,6 +18,7 @@ const Products = () => {
 
   const [savingWishlist, setSavingWishlist] = useState(null);
   const [addingToCart, setAddingToCart] = useState(null);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const handleAddToCart = async (e, productId) => {
     e.preventDefault(); // Prevents navigating to product details link
@@ -100,8 +101,27 @@ const Products = () => {
                 </span>
               )}
             </Link>
+            <button 
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} 
+              className="text-xl lg:hidden transition-transform active:scale-95 ml-2"
+            >
+              {isMobileMenuOpen ? "✕" : "☰"}
+            </button>
           </div>
         </div>
+
+        {/* MOBILE MENU */}
+        {isMobileMenuOpen && (
+          <div className="absolute left-0 top-[76px] w-full border-b border-black/[0.06] bg-[#f7f7f5] p-5 shadow-2xl lg:hidden animate-fade-in-up" style={{ animationDuration: '0.2s' }}>
+            <div className="flex flex-col gap-6">
+              <nav className="flex flex-col text-[15px] font-bold text-gray-800">
+                <Link to="/" onClick={() => setIsMobileMenuOpen(false)} className="border-b border-black/[0.06] py-4 text-left transition active:bg-black/5">Home</Link>
+                <Link to="/wishlist" onClick={() => setIsMobileMenuOpen(false)} className="border-b border-black/[0.06] py-4 text-left transition active:bg-black/5">Wishlist</Link>
+                <Link to="/cart" onClick={() => setIsMobileMenuOpen(false)} className="border-b border-black/[0.06] py-4 text-left transition active:bg-black/5">Cart</Link>
+              </nav>
+            </div>
+          </div>
+        )}
       </header>
 
       <main className="mx-auto max-w-[1400px] px-5 py-10 sm:px-8">

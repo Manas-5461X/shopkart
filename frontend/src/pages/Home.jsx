@@ -23,6 +23,16 @@ function Home() {
   const [showAnnouncement, setShowAnnouncement] = useState(true);
   const [savingWishlist, setSavingWishlist] = useState(null);
   const [addingToCart, setAddingToCart] = useState(null);
+  const [animateBadge, setAnimateBadge] = useState(false);
+  const [prevCartCount, setPrevCartCount] = useState(cartCount);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    if (cartCount > prevCartCount) {
+      setAnimateBadge(true);
+    }
+    setPrevCartCount(cartCount);
+  }, [cartCount]);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -208,21 +218,61 @@ function Home() {
             <Link to="/cart" className="relative text-[20px] transition hover:scale-105">
               🛒
               {cartCount > 0 && (
-                <span className="absolute -right-2 -top-2 flex h-[17px] min-w-[17px] items-center justify-center rounded-full bg-[#6d5dfc] px-1 text-[9px] font-bold text-white">
+                <span 
+                  onAnimationEnd={() => setAnimateBadge(false)}
+                  className={`absolute -right-2 -top-2 flex h-[17px] min-w-[17px] items-center justify-center rounded-full bg-[#6d5dfc] px-1 text-[9px] font-bold text-white ${animateBadge ? 'animate-bounce-pop' : ''}`}
+                >
                   {cartCount}
                 </span>
               )}
             </Link>
 
-            <button className="text-xl lg:hidden">☰</button>
+            <button 
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} 
+              className="text-xl lg:hidden transition-transform active:scale-95"
+            >
+              {isMobileMenuOpen ? "✕" : "☰"}
+            </button>
           </div>
         </div>
+
+        {/* MOBILE MENU */}
+        {isMobileMenuOpen && (
+          <div className="absolute left-0 top-[76px] w-full border-b border-black/[0.06] bg-[#f7f7f5] p-5 shadow-2xl lg:hidden animate-fade-in-up" style={{ animationDuration: '0.2s' }}>
+            <div className="flex flex-col gap-6">
+              {/* MOBILE SEARCH */}
+              <form onSubmit={(e) => { handleSearch(e); setIsMobileMenuOpen(false); }} className="flex items-center gap-2 rounded-full border border-black/10 bg-white px-4 py-2.5 text-sm text-gray-500 transition focus-within:border-[#6d5dfc]">
+                <span>⌕</span>
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Search products"
+                  className="w-full bg-transparent text-gray-700 placeholder-gray-400 outline-none"
+                />
+              </form>
+
+              <nav className="flex flex-col text-[15px] font-bold text-gray-800">
+                <button onClick={() => { scrollToSection('trending'); setIsMobileMenuOpen(false); }} className="border-b border-black/[0.06] py-4 text-left transition active:bg-black/5">Trending</button>
+                <button onClick={() => { scrollToSection('offers'); setIsMobileMenuOpen(false); }} className="border-b border-black/[0.06] py-4 text-left text-[#6d5dfc] transition active:bg-black/5">Offers</button>
+                <Link to="/products" onClick={() => setIsMobileMenuOpen(false)} className="border-b border-black/[0.06] py-4 text-left transition active:bg-black/5">All Products</Link>
+                
+                {!user && (
+                  <>
+                    <Link to="/login" onClick={() => setIsMobileMenuOpen(false)} className="border-b border-black/[0.06] py-4 text-left transition active:bg-black/5">Login</Link>
+                    <Link to="/register" onClick={() => setIsMobileMenuOpen(false)} className="border-b border-black/[0.06] py-4 text-left transition active:bg-black/5">Register</Link>
+                  </>
+                )}
+              </nav>
+            </div>
+          </div>
+        )}
       </header>
 
       <main>
 
         {/* HERO */}
-        <section className="mx-auto max-w-[1400px] px-4 pt-5 sm:px-8 lg:pt-8">
+        <section className="mx-auto max-w-[1400px] px-4 pt-5 sm:px-8 lg:pt-8 animate-fade-in-up">
           <div className="relative min-h-[540px] overflow-hidden rounded-[28px] bg-[#151515]">
 
             {/* Background image */}
@@ -305,7 +355,7 @@ function Home() {
         </section>
 
         {/* CATEGORIES */}
-        <section className="mx-auto max-w-[1400px] px-5 py-14 sm:px-8">
+        <section className="mx-auto max-w-[1400px] px-5 py-14 sm:px-8 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
 
           <div className="mb-8 flex items-end justify-between">
             <div>
@@ -346,7 +396,7 @@ function Home() {
         </section>
 
         {/* PRODUCTS */}
-        <section id="trending" className="mx-auto max-w-[1400px] px-5 pb-16 sm:px-8">
+        <section id="trending" className="mx-auto max-w-[1400px] px-5 pb-16 sm:px-8 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
 
           <div className="mb-8 flex items-end justify-between">
             <div>
@@ -459,7 +509,7 @@ function Home() {
         </section>
 
         {/* BIG PROMO */}
-        <section id="offers" className="mx-auto max-w-[1400px] px-5 pb-20 sm:px-8">
+        <section id="offers" className="mx-auto max-w-[1400px] px-5 pb-20 sm:px-8 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
           <div className="relative overflow-hidden rounded-[28px] bg-[#e8e5ff] px-7 py-12 sm:px-12 lg:px-16 lg:py-16">
 
             <div className="relative z-10 max-w-xl">
@@ -490,85 +540,6 @@ function Home() {
 
       </main>
 
-      {/* FOOTER */}
-      <footer className="bg-[#111] text-white">
-
-        <div className="mx-auto max-w-[1400px] px-5 py-14 sm:px-8">
-
-          <div className="grid gap-12 md:grid-cols-[1.5fr_1fr_1fr_1.2fr]">
-
-            <div>
-              <div className="text-2xl font-black tracking-[-0.05em]">
-                Shop<span className="text-[#8b7cff]">Kart</span>
-              </div>
-
-              <p className="mt-5 max-w-xs text-sm leading-6 text-white/45">
-                A modern marketplace for products you'll actually want to
-                keep.
-              </p>
-            </div>
-
-            <div>
-              <h3 className="text-xs font-bold uppercase tracking-[0.2em]">
-                Shop
-              </h3>
-
-              <div className="mt-5 flex flex-col space-y-3 text-sm text-white/50">
-                <Link to="/products" className="hover:text-white transition">New arrivals</Link>
-                <Link to="/products" className="hover:text-white transition">Categories</Link>
-                <Link to="/products" className="hover:text-white transition">Best sellers</Link>
-                <Link to="/products" className="hover:text-white transition">Deals</Link>
-              </div>
-            </div>
-
-            <div>
-              <h3 className="text-xs font-bold uppercase tracking-[0.2em]">
-                Help
-              </h3>
-
-              <div className="mt-5 space-y-3 text-sm text-white/50">
-                <p className="cursor-pointer hover:text-white">Contact</p>
-                <p className="cursor-pointer hover:text-white">Shipping</p>
-                <p className="cursor-pointer hover:text-white">Returns</p>
-                <p className="cursor-pointer hover:text-white">FAQ</p>
-              </div>
-            </div>
-
-            <div>
-              <h3 className="text-xs font-bold uppercase tracking-[0.2em]">
-                Newsletter
-              </h3>
-
-              <p className="mt-5 text-sm leading-6 text-white/45">
-                New drops, exclusive offers and things worth knowing.
-              </p>
-
-              <div className="mt-5 flex border-b border-white/20 pb-2">
-                <input
-                  type="email"
-                  placeholder="Email address"
-                  className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-white/30"
-                />
-
-                <button className="text-sm font-bold">
-                  →
-                </button>
-              </div>
-            </div>
-
-          </div>
-
-          <div className="mt-14 flex flex-col justify-between gap-4 border-t border-white/10 pt-6 text-[11px] text-white/30 sm:flex-row">
-            <p>© 2026 ShopKart. All rights reserved.</p>
-            <div className="flex gap-6">
-              <span>Privacy</span>
-              <span>Terms</span>
-              <span>Cookies</span>
-            </div>
-          </div>
-
-        </div>
-      </footer>
     </div>
   );
 }
