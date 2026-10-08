@@ -62,17 +62,10 @@ function Home() {
   const handleLogout = async () => {
     try {
       setIsLoggingOut(true);
-      const res = await fetch("/customers/logout", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-      });
-      const data = await res.json();
-      console.log("Logout response:", data);
+      const res = await axiosInstance.post("/customers/logout");
+      console.log("Logout response:", res.data);
       await checkAuth(); // Clear user from context
-      toast.success(data.message || "Logged out successfully");
+      toast.success(res.data.message || "Logged out successfully");
       navigate("/login");
     } catch (err) {
       console.error("Logout error:", err);
@@ -236,6 +229,11 @@ function Home() {
 
             <Link to="/wishlist" className="relative text-[21px] transition hover:scale-105">
               ♡
+              {wishlistItems.length > 0 && (
+                <span className="absolute -right-2 -top-2 flex h-[17px] min-w-[17px] items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-bold text-white">
+                  {wishlistItems.length}
+                </span>
+              )}
             </Link>
 
             <Link to="/cart" className="relative text-[20px] transition hover:scale-105">

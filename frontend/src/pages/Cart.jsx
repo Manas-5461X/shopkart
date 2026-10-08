@@ -2,9 +2,25 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import toast from 'react-hot-toast';
+import { axiosInstance } from '../axiosCalls/axios.js';
 
 const Cart = () => {
   const { cart, cartLoading, cartCount, cartSubtotal, updateQuantity, removeFromCart } = useCart();
+  const [wishlistItems, setWishlistItems] = React.useState([]);
+
+  React.useEffect(() => {
+    const fetchWishlist = async () => {
+      try {
+        const res = await axiosInstance.get('/wishlist');
+        setWishlistItems(res.data.wishlist);
+      } catch (error) {
+        if (error.response?.status !== 401) {
+          console.error("Error fetching wishlist count for badge", error);
+        }
+      }
+    };
+    fetchWishlist();
+  }, []);
 
   const renderHeader = () => (
     <header className="sticky top-0 z-50 border-b border-black/[0.06] bg-[#f7f7f5]/95 backdrop-blur-xl">
@@ -19,10 +35,15 @@ const Cart = () => {
           <Link to="/products" className="text-[13px] font-semibold text-gray-700 transition hover:text-[#6d5dfc]">
             Products
           </Link>
-          <Link to="/wishlist" className="text-[13px] font-semibold text-gray-700 transition hover:text-[#6d5dfc]">
-            Wishlist
+          <Link to="/wishlist" className="relative text-[21px] transition hover:scale-105" title="Wishlist">
+            ♡
+            {wishlistItems.length > 0 && (
+              <span className="absolute -right-2 -top-2 flex h-[17px] min-w-[17px] items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-bold text-white">
+                {wishlistItems.length}
+              </span>
+            )}
           </Link>
-          <Link to="/cart" className="relative text-[20px] transition hover:scale-105">
+          <Link to="/cart" className="relative flex items-center justify-center rounded-xl bg-[#6d5dfc]/15 px-3 py-1.5 text-[20px] transition hover:scale-105">
             🛒
             {cartCount > 0 && (
               <span className="absolute -right-2 -top-2 flex h-[17px] min-w-[17px] items-center justify-center rounded-full bg-[#6d5dfc] px-1 text-[9px] font-bold text-white">

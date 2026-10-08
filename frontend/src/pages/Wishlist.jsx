@@ -67,6 +67,14 @@ const Wishlist = () => {
           <Link to="/products" className="text-[13px] font-semibold text-gray-700 transition hover:text-[#6d5dfc]">
             Products
           </Link>
+          <Link to="/wishlist" className="relative text-[21px] text-[#6d5dfc] drop-shadow-md transition hover:scale-105" title="Wishlist">
+            ♥
+            {wishlist.length > 0 && (
+              <span className="absolute -right-2 -top-2 flex h-[17px] min-w-[17px] items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-bold text-white">
+                {wishlist.length}
+              </span>
+            )}
+          </Link>
           <Link to="/cart" className="relative text-[20px] transition hover:scale-105">
             🛒
             {cartCount > 0 && (

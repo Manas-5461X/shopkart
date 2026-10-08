@@ -6,7 +6,7 @@ import { useCart } from '../context/CartContext.jsx';
 
 const Products = () => {
   const { cart, cartCount, addToCart, updateQuantity, removeFromCart } = useCart();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -15,10 +15,20 @@ const Products = () => {
   const [category, setCategory] = useState(searchParams.get('category') || '');
   const [sort, setSort] = useState(searchParams.get('sort') || '');
 
+  // Sync state changes to the URL
+  useEffect(() => {
+    const params = {};
+    if (search) params.search = search;
+    if (category) params.category = category;
+    if (sort) params.sort = sort;
+    setSearchParams(params, { replace: true });
+  }, [search, category, sort, setSearchParams]);
+
 
   const [savingWishlist, setSavingWishlist] = useState(null);
   const [addingToCart, setAddingToCart] = useState(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [wishlistItems, setWishlistItems] = useState([]);
 
   const handleAddToCart = async (e, productId) => {
     e.preventDefault(); // Prevents navigating to product details link
@@ -36,17 +46,27 @@ const Products = () => {
     }
   };
 
-  const handleAddToWishlist = async (e, productId) => {
-    e.preventDefault(); // Prevents navigating to product details link
+  const handleToggleWishlist = async (e, productId) => {
+    e.preventDefault();
     setSavingWishlist(productId);
+    
+    const isWishlisted = wishlistItems.includes(productId);
+    
     try {
-      await axiosInstance.post(`/wishlist/${productId}`);
-      toast.success("Added to Wishlist"); 
-    } catch (error) {
-      if (error.response?.status === 409) {
-        toast.error("Product already in wishlist");
+      if (isWishlisted) {
+        await axiosInstance.delete(`/wishlist/${productId}`);
+        setWishlistItems(prev => prev.filter(id => id !== productId));
+        toast.success("Removed from Wishlist");
       } else {
-        toast.error("Unable to save product. Please try again.");
+        await axiosInstance.post(`/wishlist/${productId}`);
+        setWishlistItems(prev => [...prev, productId]);
+        toast.success("Added to Wishlist");
+      }
+    } catch (error) {
+      if (error.response?.status === 401) {
+        toast.error("Please login to manage wishlist");
+      } else {
+        toast.error("Unable to update wishlist. Please try again.");
       }
     } finally {
       setSavingWishlist(null);
@@ -74,6 +94,22 @@ const Products = () => {
     const timeoutId = setTimeout(() => {
       loadProducts();
     }, 300);
+    
+    const fetchWishlist = async () => {
+      try {
+        const res = await axiosInstance.get('/wishlist');
+        setWishlistItems(res.data.wishlist.map(item => item._id || item));
+      } catch (error) {
+        // We fail silently here because if a guest user views the products,
+        // the API returns a 401 Unauthorized. We don't want to show an error
+        // toast for a missing badge!
+        if (error.response?.status !== 401) {
+          console.error("Error fetching wishlist count for badge", error);
+        }
+      }
+    };
+    fetchWishlist();
+    
     return () => clearTimeout(timeoutId);
   }, [search, category, sort]);
 
@@ -90,8 +126,16 @@ const Products = () => {
             <Link to="/" className="text-[13px] font-semibold text-gray-700 transition hover:text-[#6d5dfc]">
               Home
             </Link>
-            <Link to="/wishlist" className="text-[13px] font-semibold text-gray-700 transition hover:text-[#6d5dfc]">
-              Wishlist
+            <Link to="/products" className="text-[13px] font-bold text-[#6d5dfc] drop-shadow-sm transition">
+              Products
+            </Link>
+            <Link to="/wishlist" className="relative text-[21px] transition hover:scale-105" title="Wishlist">
+              ♡
+              {wishlistItems.length > 0 && (
+                <span className="absolute -right-2 -top-2 flex h-[17px] min-w-[17px] items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-bold text-white">
+                  {wishlistItems.length}
+                </span>
+              )}
             </Link>
             <Link to="/cart" className="relative text-[20px] transition hover:scale-105">
               🛒
@@ -101,27 +145,8 @@ const Products = () => {
                 </span>
               )}
             </Link>
-            <button 
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} 
-              className="text-xl lg:hidden transition-transform active:scale-95 ml-2"
-            >
-              {isMobileMenuOpen ? "✕" : "☰"}
-            </button>
           </div>
         </div>
-
-        {/* MOBILE MENU */}
-        {isMobileMenuOpen && (
-          <div className="absolute left-0 top-[76px] w-full border-b border-black/[0.06] bg-[#f7f7f5] p-5 shadow-2xl lg:hidden animate-fade-in-up" style={{ animationDuration: '0.2s' }}>
-            <div className="flex flex-col gap-6">
-              <nav className="flex flex-col text-[15px] font-bold text-gray-800">
-                <Link to="/" onClick={() => setIsMobileMenuOpen(false)} className="border-b border-black/[0.06] py-4 text-left transition active:bg-black/5">Home</Link>
-                <Link to="/wishlist" onClick={() => setIsMobileMenuOpen(false)} className="border-b border-black/[0.06] py-4 text-left transition active:bg-black/5">Wishlist</Link>
-                <Link to="/cart" onClick={() => setIsMobileMenuOpen(false)} className="border-b border-black/[0.06] py-4 text-left transition active:bg-black/5">Cart</Link>
-              </nav>
-            </div>
-          </div>
-        )}
       </header>
 
       <main className="mx-auto max-w-[1400px] px-5 py-10 sm:px-8">
@@ -221,11 +246,15 @@ const Products = () => {
                   )}
 
                   <button 
-                    onClick={(e) => handleAddToWishlist(e, product._id)}
+                    onClick={(e) => handleToggleWishlist(e, product._id)}
                     disabled={savingWishlist === product._id}
                     className="absolute top-4 right-4 bg-white/90 p-2.5 rounded-full shadow-sm hover:bg-red-50 hover:text-red-500 text-gray-400 transition disabled:opacity-50 z-10 flex items-center justify-center text-lg leading-none"
                   >
-                    {savingWishlist === product._id ? "⏳" : "♡"}
+                    {savingWishlist === product._id ? "⏳" : (
+                      <span className={`${wishlistItems.includes(product._id) ? 'text-red-500' : ''}`}>
+                        {wishlistItems.includes(product._id) ? '♥' : '♡'}
+                      </span>
+                    )}
                   </button>
 
                   <Link to={`/products/${product._id}`} className="absolute inset-0 z-0">

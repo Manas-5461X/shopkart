@@ -1,132 +1,148 @@
-# ShopKart 🛒
+# ShopKart 🛍️✨
 
-**ShopKart** is a modern, full-stack e-commerce application designed to provide a fast, secure, and seamless shopping experience for customers.
+![ShopKart Header](https://via.placeholder.com/1200x400/111111/FFFFFF?text=ShopKart+-+Premium+MERN+E-Commerce)
 
-Built from the ground up using the **MERN Stack** (MongoDB, Express, React, Node.js), ShopKart features a fully responsive UI built with Tailwind CSS and a robust, secure RESTful API backend.
+**ShopKart** is a state-of-the-art, full-stack e-commerce application engineered to deliver a blazing-fast, highly secure, and visually stunning shopping experience. 
 
----
-
-## ✨ Features
-
-- **Authentication System:** Secure customer registration, login, profile management, and password changing with JWT and HttpOnly Cookies.
-- **Product Catalog:** Dynamic product discovery with search, category filtering, and sorting fetched directly from the database.
-- **Product Details:** Individual pages displaying product information, pricing, stock availability, and a beautiful UI.
-- **Wishlist Management:** Customers can save products to their personal wishlist securely stored in MongoDB using database references (ObjectIds) to avoid duplication.
-- **Beautiful UI/UX:** Built with Tailwind CSS, the application offers premium, modern design aesthetics including micro-animations, glassmorphism, responsive grids, and subtle shadows.
+Designed with a heavy emphasis on UI/UX and modern backend architecture, ShopKart serves as a comprehensive showcase of scalable full-stack development using the **MERN Stack** (MongoDB, Express.js, React.js, Node.js). 
 
 ---
 
-## 🛠️ Technology Stack
+## 🌟 Comprehensive Feature Set
 
-### Frontend (Client)
-- **Framework:** React.js (via Vite)
-- **Routing:** React Router v6
-- **Styling:** Tailwind CSS
-- **HTTP Client:** Axios (with interceptors for cookies/credentials)
-- **State Management:** React Hooks (`useState`, `useEffect`, `useContext` for Auth)
+### 🛡️ Robust Authentication & Security
+- **JWT & HttpOnly Cookies:** Implements industry-standard authentication using JSON Web Tokens stored securely in HttpOnly, SameSite cookies to mitigate XSS and CSRF attacks.
+- **Encrypted Credentials:** All sensitive user data, including passwords, is hashed and salted via `bcrypt` before reaching the database.
+- **Protected Routing:** Strict frontend and backend route guards ensure that only authenticated customers can access private features like Wishlists, Carts, and Profile settings.
+- **Session Management:** Seamless login, registration, password modification, and secure logout flows.
 
-### Backend (Server)
-- **Runtime:** Node.js
-- **Web Framework:** Express.js
-- **Database & ODM:** MongoDB Atlas with Mongoose
-- **Security:** bcrypt (password hashing), JSON Web Tokens (JWT)
-- **Middleware:** cookie-parser, cors, custom authentication guards (`protectRoute`)
+### 🛍️ Dynamic Product Discovery
+- **Live Search & Filtering:** Customers can instantly filter thousands of products by category or search term, with URL query string synchronization to ensure that direct links to searches always load the correct results.
+- **Smart Sorting:** Sort products dynamically by price (High-to-Low or Low-to-High) without reloading the page.
+- **Inventory Tracking:** Real-time stock status is displayed prominently. Products with `0` stock dynamically update the UI to prevent purchases, graying out buttons and displaying "Out of Stock" badges.
 
----
+### ❤️ Persistent Wishlist System
+- **MongoDB Relationships:** Instead of duplicating product data, the wishlist utilizes Mongoose `ObjectId` references to build a relational bridge between the `Customer` and `Product` collections.
+- **Graceful Degradation:** Wishlist badges fail silently for unauthenticated guest users to prevent annoying login popups, while still encouraging them to log in when attempting to add items.
+- **Optimistic UI Updates:** Instant toggle behavior on the frontend provides a snappy user experience while background synchronization handles the heavy lifting with the database.
 
-## 📁 Project Architecture
+### 🛒 Intelligent Shopping Cart
+- **Global State Management:** Powered by React Context API, the cart state is globally available, instantly updating the navbar badge, cart page, and product buttons simultaneously across the entire application.
+- **Granular Quantity Controls:** Customers can smoothly increment, decrement, or remove items. The backend enforces strict validation to prevent adding more items than currently exist in inventory.
+- **Dynamic Subtotals:** Live calculation of cart totals, syncing directly with the MongoDB persistent cart array so no items are lost upon page refresh.
 
-The project is split into two distinct directories:
-
-### Frontend (`/frontend`)
-Component-based React architecture heavily utilizing Tailwind utility classes for rapid UI development. Communicates with the backend exclusively via REST APIs.
-
-### Backend (`/backend`)
-Follows a strict MVC (Model-View-Controller) pattern:
-- **Models:** Mongoose schemas defining `Customer` and `Product` structures, including relational data (Wishlist references).
-- **Controllers:** Business logic handling requests and sending JSON responses.
-- **Routes:** API endpoint definitions mapped to controller functions.
-- **Middlewares:** Authentication guards extracting and verifying JWTs from HttpOnly cookies.
+### 🎨 Premium UI/UX & Aesthetics
+- **Tailwind CSS Mastery:** The entire interface is built using custom Tailwind utility classes, completely avoiding generic component libraries.
+- **Glassmorphism & Gradients:** Utilizes sleek backdrop blurs, soft drop-shadows, and dynamic animated background blobs for a luxurious, modern aesthetic.
+- **Responsive By Design:** Flawless layout scaling from ultra-wide desktop monitors down to mobile devices, featuring a custom mobile navigation overlay.
 
 ---
 
-## 📡 Core API Endpoints
+## 🛠️ Technology Stack Deep Dive
 
-### Authentication (`/customers`)
-| Method | Endpoint | Description | Protected |
+### Frontend Architecture (Client)
+- **Core:** React.js (v18), initialized via Vite for lightning-fast HMR and optimized builds.
+- **Routing:** React Router v6 for declarative, component-based routing and parameter parsing (`useSearchParams`).
+- **Styling:** Tailwind CSS for a highly customized, constraint-based design system.
+- **Data Fetching:** Axios instance pre-configured with `withCredentials: true` to seamlessly handle authentication cookies automatically on every request.
+- **State Management:** A hybrid approach using React Context API for global needs (Cart, Auth) and highly-localized `useState/useEffect` for component-specific data (Wishlists, Product Details) to reduce unnecessary re-renders.
+
+### Backend Architecture (Server)
+- **Core:** Node.js paired with Express.js to create a lightweight, high-performance RESTful API.
+- **Database:** MongoDB Atlas (Cloud) managed via Mongoose ODM for strict schema validation and complex population queries.
+- **Authentication:** `jsonwebtoken` for stateless auth, `cookie-parser` for HTTP header extraction.
+- **Design Pattern:** Strict MVC (Model-View-Controller) separation of concerns.
+
+---
+
+## 📡 Complete REST API Documentation
+
+### 🔐 Authentication (`/customers`)
+| Method | Endpoint | Description | Access |
 | :--- | :--- | :--- | :---: |
-| `POST` | `/customers/register` | Register a new customer | ❌ |
-| `POST` | `/customers/login` | Log in and receive HttpOnly cookie | ❌ |
-| `GET` | `/customers/me` | Fetch authenticated customer profile | ✅ |
-| `PATCH`| `/customers/change-password` | Change customer password | ✅ |
-| `POST` | `/customers/logout` | Clear auth cookie | ✅ |
+| `POST` | `/customers/register` | Create a new customer account, hash password, and set cookie | Public |
+| `POST` | `/customers/login` | Verify credentials and generate JWT HttpOnly cookie | Public |
+| `GET` | `/customers/me` | Retrieve the authenticated customer's profile data | Private |
+| `PATCH`| `/customers/change-password` | Verify old password and securely update to a new one | Private |
+| `POST` | `/customers/logout` | Destroy the session and clear the HttpOnly cookie | Private |
 
-### Products (`/products`)
-| Method | Endpoint | Description | Protected |
+### 📦 Products (`/products`)
+| Method | Endpoint | Description | Access |
 | :--- | :--- | :--- | :---: |
-| `GET` | `/products` | Fetch all products (supports `search`, `category`, `sort` queries) | ❌ |
-| `GET` | `/products/:id`| Fetch details for a specific product | ❌ |
+| `GET` | `/products` | Fetch all products. Supports `?search`, `?category`, `?sort` | Public |
+| `GET` | `/products/:id`| Fetch detailed information for a single product | Public |
 
-### Wishlist (`/wishlist`)
-| Method | Endpoint | Description | Protected |
+### ❤️ Wishlist (`/wishlist`)
+| Method | Endpoint | Description | Access |
 | :--- | :--- | :--- | :---: |
-| `GET` | `/wishlist` | Fetch the current customer's populated wishlist | ✅ |
-| `POST` | `/wishlist/:productId`| Add a product to the customer's wishlist | ✅ |
-| `DELETE`| `/wishlist/:productId`| Remove a product from the wishlist | ✅ |
+| `GET` | `/wishlist` | Fetch the authenticated customer's fully populated wishlist | Private |
+| `POST` | `/wishlist/:productId`| Push a product ObjectId to the customer's wishlist array | Private |
+| `DELETE`| `/wishlist/:productId`| Pull a product ObjectId from the customer's wishlist array | Private |
+
+### 🛒 Cart (`/cart`)
+| Method | Endpoint | Description | Access |
+| :--- | :--- | :--- | :---: |
+| `GET` | `/cart` | Fetch the customer's cart, populated with product details | Private |
+| `POST` | `/cart/:productId`| Add a product to the cart, or increment if it already exists | Private |
+| `PATCH`| `/cart/:productId`| Explicitly set the quantity of a specific cart item | Private |
+| `DELETE`| `/cart/:productId`| Completely remove a product from the cart array | Private |
 
 ---
 
-## ⚙️ Getting Started
+## ⚙️ Local Development Guide
 
 ### 1. Prerequisites
-- Node.js (v18+)
-- MongoDB Atlas connection URI or local MongoDB instance
+Ensure your local development environment has the following installed:
+- Node.js (v18.0.0 or higher)
+- npm or yarn package manager
+- A MongoDB Atlas connection URI (or a running local MongoDB instance)
 
-### 2. Installation
+### 2. Clone and Install
+Clone the repository to your local machine, then install the dependencies for both the frontend and backend architectures:
 
-Clone the repository, then install dependencies for both ends:
-
-**Backend:**
 ```bash
+# Clone the repository
+git clone https://github.com/your-username/shopkart.git
+cd shopkart
+
+# Install Backend dependencies
 cd backend
 npm install
-```
 
-**Frontend:**
-```bash
-cd frontend
+# Install Frontend dependencies
+cd ../frontend
 npm install
 ```
 
-### 3. Environment Variables
+### 3. Environment Configuration
+Create a `.env` file in the root of the `backend/` directory to store your secrets securely:
 
-Create a `.env` file in the `backend/` folder:
 ```env
+# backend/.env
 PORT=8000
-dbUrl=your_mongodb_connection_uri/shopkart
-JWT_SECRET=your_jwt_secret_key
+dbUrl=mongodb+srv://<username>:<password>@cluster.mongodb.net/shopkart
+JWT_SECRET=generate_a_very_secure_random_string_here
 NODE_ENV=development
 ```
 
-*(Note: The frontend expects the backend to run on `http://localhost:8000` by default via Vite proxy or Axios base URL configuration).*
+*(Note: In development, the Vite frontend is configured to proxy API requests or use a base Axios URL pointing directly to `http://localhost:8000`)*
 
-### 4. Running the Application
+### 4. Bootstrapping the Application
+ShopKart requires two separate terminal instances to run the full stack concurrently.
 
-You will need two terminal windows.
-
-**Terminal 1 (Backend):**
+**Terminal 1 (Booting the Server):**
 ```bash
 cd backend
 npm run dev
 ```
 
-**Terminal 2 (Frontend):**
+**Terminal 2 (Booting the Client):**
 ```bash
 cd frontend
 npm run dev
 ```
 
-The frontend will start on `http://localhost:5173` and the backend on `http://localhost:8000`.
+The frontend will compile and become accessible at `http://localhost:5173`, seamlessly communicating with the backend API listening on `http://localhost:8000`.
 
 ---
-*Built with ❤️ as part of the ShopKart Engineering Labs.*
+*Built with ❤️ as a modern e-commerce portfolio application. Focused on scalable architecture and premium design.*

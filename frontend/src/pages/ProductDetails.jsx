@@ -12,6 +12,7 @@ const ProductDetails = () => {
   const [savingWishlist, setSavingWishlist] = useState(false);
   const { addToCart, cartCount, cart, updateQuantity, removeFromCart } = useCart();
   const [adding, setAdding] = useState(false);
+  const [wishlistItems, setWishlistItems] = useState([]);
 
   const cartItem = cart.find(item => item.product._id === id);
 
@@ -21,16 +22,25 @@ const ProductDetails = () => {
     setAdding(false);
   };
 
-  const handleAddToWishlist = async () => {
+  const handleToggleWishlist = async () => {
     setSavingWishlist(true);
+    const isWishlisted = wishlistItems.includes(id);
+
     try {
-      await axiosInstance.post(`/wishlist/${id}`);
-      toast.success("Added to Wishlist");
-    } catch (error) {
-      if (error.response?.status === 409) {
-        toast.error("Product already in wishlist");
+      if (isWishlisted) {
+        await axiosInstance.delete(`/wishlist/${id}`);
+        setWishlistItems(prev => prev.filter(itemId => itemId !== id));
+        toast.success("Removed from Wishlist");
       } else {
-        toast.error("Unable to save product. Please try again.");
+        await axiosInstance.post(`/wishlist/${id}`);
+        setWishlistItems(prev => [...prev, id]);
+        toast.success("Added to Wishlist");
+      }
+    } catch (error) {
+      if (error.response?.status === 401) {
+        toast.error("Please login to manage wishlist");
+      } else {
+        toast.error("Unable to update wishlist. Please try again.");
       }
     } finally {
       setSavingWishlist(false);
@@ -48,7 +58,20 @@ const ProductDetails = () => {
         setLoading(false);
       }
     };
+    
+    const fetchWishlist = async () => {
+      try {
+        const res = await axiosInstance.get('/wishlist');
+        setWishlistItems(res.data.wishlist.map(item => item._id || item));
+      } catch (error) {
+        if (error.response?.status !== 401) {
+          console.error("Error fetching wishlist count", error);
+        }
+      }
+    };
+    
     loadProduct();
+    fetchWishlist();
   }, [id]);
 
   if (loading) {
@@ -87,14 +110,27 @@ const ProductDetails = () => {
             Shop<span className="text-[#6d5dfc]">Kart</span>
           </Link>
           <div className="ml-auto flex gap-6 items-center">
-            <Link to="/wishlist" className="text-[13px] font-bold text-gray-700 hover:text-red-500 transition flex items-center gap-1">
-              <span>♡</span> Wishlist
-            </Link>
-            <Link to="/cart" className="text-[13px] font-bold text-[#6d5dfc] transition flex items-center gap-1 bg-white shadow-sm border border-gray-100 px-3 py-1.5 rounded-full">
-              🛒 Cart {cartCount > 0 && <span className="bg-[#6d5dfc] text-white text-[10px] px-1.5 py-0.5 rounded-full">{cartCount}</span>}
-            </Link>
             <Link to="/" className="text-[13px] font-semibold text-gray-700 transition hover:text-[#6d5dfc]">
-              Back to Home
+              Home
+            </Link>
+            <Link to="/products" className="text-[13px] font-semibold text-gray-700 transition hover:text-[#6d5dfc]">
+              Products
+            </Link>
+            <Link to="/wishlist" className="relative text-[21px] transition hover:scale-105" title="Wishlist">
+              ♡
+              {wishlistItems.length > 0 && (
+                <span className="absolute -right-2 -top-2 flex h-[17px] min-w-[17px] items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-bold text-white">
+                  {wishlistItems.length}
+                </span>
+              )}
+            </Link>
+            <Link to="/cart" className="relative text-[20px] transition hover:scale-105">
+              🛒
+              {cartCount > 0 && (
+                <span className="absolute -right-2 -top-2 flex h-[17px] min-w-[17px] items-center justify-center rounded-full bg-[#6d5dfc] px-1 text-[9px] font-bold text-white">
+                  {cartCount}
+                </span>
+              )}
             </Link>
           </div>
         </div>
@@ -209,11 +245,15 @@ const ProductDetails = () => {
                   </button>
                 )}
                 <button
-                  onClick={handleAddToWishlist}
+                  onClick={handleToggleWishlist}
                   disabled={savingWishlist}
-                  className="w-[56px] h-[56px] flex items-center justify-center rounded-full border-2 border-black/10 bg-white text-gray-400 hover:text-red-500 hover:border-red-500 transition disabled:opacity-50 text-xl flex-shrink-0"
+                  className={`w-[56px] h-[56px] flex items-center justify-center rounded-full border-2 transition disabled:opacity-50 text-xl flex-shrink-0 ${
+                    wishlistItems.includes(id) 
+                      ? 'border-red-500 bg-red-50 text-red-500' 
+                      : 'border-black/10 bg-white text-gray-400 hover:text-red-500 hover:border-red-500'
+                  }`}
                 >
-                  {savingWishlist ? "⏳" : "♡"}
+                  {savingWishlist ? "⏳" : wishlistItems.includes(id) ? "♥" : "♡"}
                 </button>
               </div>
 
