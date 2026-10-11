@@ -47,7 +47,6 @@ const Wishlist = () => {
     try {
       await axiosInstance.delete(`/wishlist/${productId}`);
       toast.success("Removed from wishlist");
-      // Optimistic UI update
       setWishlist(prev => prev.filter(item => item._id !== productId));
     } catch (err) {
       toast.error("Could not remove item.");

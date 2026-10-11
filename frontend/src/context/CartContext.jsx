@@ -58,7 +58,7 @@ export const CartProvider = ({ children }) => {
     try {
       await axiosInstance.delete(`/cart/${productId}`);
       toast.success("Removed from Cart");
-      fetchCart(); // Refresh
+      fetchCart();
     } catch (error) {
       toast.error("Could not remove item");
     }
