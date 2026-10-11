@@ -1,5 +1,6 @@
 import { Customer } from "../models/customer.model.js";
-import bcrypt from 'bcrypt'
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
 import { generateToken } from "../utils/generateToken.js";
 import { isValidEmail } from "../utils/validateEmail.js";
 import { isValidPhone } from "../utils/validatePhone.js";
@@ -120,11 +121,12 @@ export const loginCustomer = async (req, res) => {
         }
 
         // generating token
+        const isProduction = process.env.NODE_ENV === "production";
         const cookiesOptions = {
             maxAge: 10 * 24 * 60 * 60 * 1000, // 10 days in ms
-            httpOnly: true, // it prevent client side js from accessing the cookie  
-            sameSite: "strict", // it prevent cross site request
-            secure: false, // No it does not ensure the cookie is only sent over https connection
+            httpOnly: true, // it prevents client side js from accessing the cookie  
+            sameSite: "strict", // prevents cross site request forgery
+            secure: isProduction, // secure in production over HTTPS
         }
 
         const token = generateToken(customer._id)
@@ -139,11 +141,17 @@ export const loginCustomer = async (req, res) => {
 //customer logout 
 export const logoutCustomer = async (req, res) => {
     try {
+        const isProduction = process.env.NODE_ENV === "production";
         res.clearCookie("token", {
             httpOnly: true,
-            secure: false,
+            secure: isProduction,
             sameSite: "strict"
-        })
+        });
+        res.clearCookie("admin_session", {
+            httpOnly: true,
+            secure: isProduction,
+            sameSite: "strict"
+        });
         return res.status(200).json({ message: "Customer logged out successfully" });
     } catch (error) {
         res.status(500).json({ message: "Server error", error: error.message });
@@ -153,17 +161,21 @@ export const logoutCustomer = async (req, res) => {
 
 // getting logged in customer profile 
 export const getMe = async (req, res) => {
-    // try {
-    //     const customer = await Customer.findById(req.userId).select('-password');
-    //     if (!customer) {
-    //         return res.status(404).json({ message: "User not found" });
-    //     }
-    //     return res.status(200).json(customer);
-    // } catch (error) {
-    //     return res.status(500).json({ message: "Server error", error: error.message });
-    // }
+    try {
+        const rawAdminEmails = process.env.ADMIN_EMAIL || "";
+        const adminEmails = rawAdminEmails
+            .split(",")
+            .map(e => e.trim().toLowerCase())
+            .filter(Boolean);
 
-    return res.status(200).json(req.user);
+        const userObj = req.user.toObject ? req.user.toObject() : { ...req.user };
+        const userEmail = userObj.email?.toLowerCase();
+        userObj.isAdmin = Boolean(userEmail && adminEmails.includes(userEmail));
+
+        return res.status(200).json(userObj);
+    } catch (error) {
+        return res.status(500).json({ success: false, message: "Server error", error: error.message });
+    }
 };
 
 
@@ -173,6 +185,10 @@ export const changePassword = async (req, res) => {
 
     if (!oldPassword || !newPassword) {
         return res.status(400).json({ message: "Please provide old and new passwords" });
+    }
+
+    if (newPassword.length < 6) {
+        return res.status(400).json({ message: "New password must be at least 6 characters long" });
     }
 
     try {
@@ -239,5 +255,45 @@ export const updateProfile = async (req, res) => {
         });
     } catch (error) {
         res.status(500).json({ success: false, message: "Server error", error: error.message });
+    }
+};
+
+// verify admin security passkey
+export const verifyAdminKey = async (req, res) => {
+    try {
+        const { key } = req.body;
+        const serverAdminKey = process.env.ADMIN_KEY;
+
+        if (!serverAdminKey) {
+            return res.status(500).json({ success: false, message: "Admin key is not configured on server" });
+        }
+
+        if (!key || key !== serverAdminKey) {
+            return res.status(401).json({ success: false, message: "Invalid Admin Security Key" });
+        }
+
+        // Generate a cryptographically signed admin session token valid for 4 hours
+        const adminToken = jwt.sign(
+            { userId: req.user._id, email: req.user.email, role: 'admin' },
+            process.env.JWT_SECRET,
+            { expiresIn: '4h' }
+        );
+
+        // Set signed HTTP-only cookie
+        const isProduction = process.env.NODE_ENV === "production";
+        res.cookie('admin_session', adminToken, {
+            maxAge: 4 * 60 * 60 * 1000, // 4 hours
+            httpOnly: true,
+            sameSite: 'strict',
+            secure: isProduction
+        });
+
+        return res.status(200).json({ 
+            success: true, 
+            message: "Admin key verified successfully",
+            adminToken 
+        });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: "Error verifying admin key", error: error.message });
     }
 };

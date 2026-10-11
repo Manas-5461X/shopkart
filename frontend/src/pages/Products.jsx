@@ -200,8 +200,28 @@ const Products = () => {
 
         {/* State Handling */}
         {loading && (
-          <div className="flex h-40 items-center justify-center">
-            <p className="text-sm font-semibold text-gray-500 animate-pulse">Loading products...</p>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 lg:gap-8">
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+              <article
+                key={i}
+                className="overflow-hidden rounded-2xl bg-white shadow-md flex flex-col border border-gray-200 animate-pulse"
+              >
+                <div className="relative aspect-[4/3] bg-gray-200"></div>
+                <div className="p-5 sm:p-6 flex flex-col flex-1 justify-between border-t border-black/[0.03] bg-gray-50/30">
+                  <div className="h-4 w-3/4 bg-gray-200 rounded mb-4"></div>
+                  <div className="flex items-center justify-between mt-4">
+                    <div className="flex flex-col gap-1.5 w-1/2">
+                      <div className="h-5 w-16 bg-gray-200 rounded"></div>
+                      <div className="h-3 w-20 bg-gray-200 rounded"></div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="h-9 w-9 rounded-full bg-gray-200"></div>
+                      <div className="h-9 w-9 rounded-full bg-gray-200"></div>
+                    </div>
+                  </div>
+                </div>
+              </article>
+            ))}
           </div>
         )}
         {error && (

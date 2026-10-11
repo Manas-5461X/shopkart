@@ -220,11 +220,11 @@ const Cart = () => {
                 <span className="text-3xl font-black text-[#111]">₹{cartSubtotal}</span>
               </div>
 
-              <button className="w-full relative inline-flex items-center justify-center overflow-hidden rounded-2xl p-4 font-bold text-white shadow-xl hover:shadow-2xl transition duration-300 transform hover:-translate-y-1 bg-black group">
+              <Link to="/checkout" className="w-full relative flex items-center justify-center overflow-hidden rounded-2xl p-4 font-bold text-white shadow-xl hover:shadow-2xl transition duration-300 transform hover:-translate-y-1 bg-black group">
                 <span className="absolute inset-0 h-full w-full bg-gradient-to-br from-black via-[#111] to-[#333]"></span>
                 <span className="absolute bottom-0 right-0 block h-64 w-64 translate-x-32 translate-y-24 rounded-full bg-gradient-to-br from-[#6d5dfc] to-purple-500 opacity-50 blur-3xl transition-all duration-700 group-hover:translate-x-10 group-hover:translate-y-10 group-hover:opacity-80"></span>
                 <span className="relative z-10">Proceed to Checkout</span>
-              </button>
+              </Link>
               
               <p className="text-[11px] text-gray-400 font-medium text-center mt-4">
                 Taxes and shipping calculated at checkout.

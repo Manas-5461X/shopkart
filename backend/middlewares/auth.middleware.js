@@ -29,3 +29,54 @@ export const protectRoute = async(req, res, next) => {
         res.status(401).json({ success: false, message: 'Unauthorized or Expired Token' });
     }   
 }
+
+export const adminRoute = (req, res, next) => {
+    try {
+        const rawAdminEmails = process.env.ADMIN_EMAIL || "";
+        const adminEmails = rawAdminEmails
+            .split(",")
+            .map(e => e.trim().toLowerCase())
+            .filter(Boolean);
+
+        const userEmail = req.user?.email?.toLowerCase();
+
+        // 1. Verify user's email is in allowed ADMIN_EMAIL list
+        if (!userEmail || !adminEmails.includes(userEmail)) {
+            return res.status(403).json({
+                success: false,
+                message: "Forbidden - Admin access required"
+            });
+        }
+
+        // 2. Cryptographic Admin Session Verification (Prevents devtools/localStorage spoofing)
+        const adminSessionToken = req.cookies.admin_session || req.headers['x-admin-token'];
+        if (!adminSessionToken) {
+            return res.status(403).json({
+                success: false,
+                requiresAdminKey: true,
+                message: "Admin key verification required"
+            });
+        }
+
+        try {
+            const decoded = jwt.verify(adminSessionToken, process.env.JWT_SECRET);
+            if (decoded.role !== 'admin' || decoded.email?.toLowerCase() !== userEmail) {
+                return res.status(403).json({
+                    success: false,
+                    requiresAdminKey: true,
+                    message: "Invalid or expired admin session token"
+                });
+            }
+        } catch (tokenErr) {
+            return res.status(403).json({
+                success: false,
+                requiresAdminKey: true,
+                message: "Admin session expired. Please re-enter admin key."
+            });
+        }
+
+        next();
+    } catch (error) {
+        res.status(500).json({ success: false, message: "Error validating admin access" });
+    }
+};

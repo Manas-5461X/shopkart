@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom"
 import { Toaster } from "react-hot-toast"
 import Home from "./pages/Home"
 import Register from "./pages/Register"
@@ -11,9 +11,25 @@ import ProductDetail from "./pages/ProductDetails"
 import Profile from "./pages/Profile"
 import Wishlist from './pages/Wishlist';
 import Cart from './pages/Cart';
+import Checkout from "./pages/Checkout";
+import Orders from "./pages/Orders";
+import OrderDetails from "./pages/OrderDetails";
+import OrderSuccess from "./pages/OrderSuccess";
+import AdminOrders from "./pages/AdminOrders";
+import AdminProducts from "./pages/AdminProducts";
+import AdminRoute from "./components/AdminRoute";
 import { CartProvider } from './context/CartContext';
 import NotFound from './pages/NotFound';
 import Footer from './components/Footer';
+
+function ConditionalFooter() {
+  const location = useLocation();
+  const hideFooterRoutes = ['/login', '/register'];
+  if (hideFooterRoutes.includes(location.pathname)) {
+    return null;
+  }
+  return <Footer />;
+}
 
 function App() {
 
@@ -32,9 +48,16 @@ function App() {
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             <Route path="/wishlist" element={<ProtectedRoute><Wishlist /></ProtectedRoute>} />
             <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
+            <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
+            <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
+            <Route path="/orders/:id" element={<ProtectedRoute><OrderDetails /></ProtectedRoute>} />
+            <Route path="/order-success/:id" element={<ProtectedRoute><OrderSuccess /></ProtectedRoute>} />
+            <Route path="/admin" element={<AdminRoute><AdminOrders /></AdminRoute>} />
+            <Route path="/admin/orders" element={<AdminRoute><AdminOrders /></AdminRoute>} />
+            <Route path="/admin/products" element={<AdminRoute><AdminProducts /></AdminRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
-          <Footer />
+          <ConditionalFooter />
         </div>
        </BrowserRouter>
       </CartProvider>

@@ -4,10 +4,12 @@ import dotenv from 'dotenv'
 import cookieParser from 'cookie-parser'
 import dns from 'dns'
 import cors from 'cors'
+import helmet from 'helmet'
 import customerRouter from "./routes/customer.routes.js";
 import productRouter from "./routes/product.routes.js";
 import wishlistRouter from './routes/wishlist.routes.js';
 import cartRouter from './routes/cart.routes.js';
+import orderRoutes from './routes/order.routes.js';
 
 
 // to fis the dns issue 
@@ -23,13 +25,27 @@ const app = express()
 const PORT = process.env.PORT || 8000
 
 
-// middlewars 
+// Security and standard middlewares 
+app.use(helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" }
+}))
+
+const allowedOrigins = [
+    "http://localhost:5173",
+    process.env.CLIENT_URL
+].filter(Boolean);
 
 app.use(cors({
-    credentials:true, // for token passing 
-    origin:"http://localhost:5173",
+    credentials: true, // for token passing 
+    origin: (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error("Blocked by CORS policy"));
+        }
+    },
 }))
-app.use(express.json())
+app.use(express.json({ limit: "10mb" }))
 app.use(cookieParser())
 
 
@@ -37,6 +53,7 @@ app.use("/customers", customerRouter);
 app.use("/products", productRouter);
 app.use("/wishlist", wishlistRouter);
 app.use("/cart", cartRouter);
+app.use('/api/orders', orderRoutes);
 
 mongoose.connect(process.env.dbUrl).then(() => {
     console.log("DB Connected")

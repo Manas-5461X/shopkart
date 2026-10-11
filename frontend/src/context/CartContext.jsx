@@ -64,12 +64,16 @@ export const CartProvider = ({ children }) => {
     }
   };
 
+  const clearCart = () => {
+    setCart([]);
+  };
+
   // Derived values
   const cartCount = cart.reduce((total, item) => total + item.quantity, 0);
   const cartSubtotal = cart.reduce((total, item) => total + (item.product.price * item.quantity), 0);
 
   return (
-    <CartContext.Provider value={{ cart, cartLoading, cartCount, cartSubtotal, addToCart, updateQuantity, removeFromCart }}>
+    <CartContext.Provider value={{ cart, cartLoading, cartCount, cartSubtotal, addToCart, updateQuantity, removeFromCart, clearCart }}>
       {children}
     </CartContext.Provider>
   );

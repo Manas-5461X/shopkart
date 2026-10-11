@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
+// Error 404 page 
 const NotFound = () => {
   return (
     <div className="min-h-[80vh] flex items-center justify-center bg-white px-6">

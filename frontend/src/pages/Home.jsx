@@ -192,10 +192,26 @@ function Home() {
                       {(user?.fullname || user?.fullName)?.charAt(0) || "👤"}
                     </div>
                     <div className="flex flex-col overflow-hidden">
-                      <p className="truncate text-sm font-bold text-gray-900">{user?.fullname || user?.fullName}</p>
+                      <div className="flex items-center gap-1.5">
+                        <p className="truncate text-sm font-bold text-gray-900">{user?.fullname || user?.fullName}</p>
+                        {user?.isAdmin && (
+                          <span className="rounded bg-black px-1.5 py-0.2 text-[9px] font-black uppercase text-white">Admin</span>
+                        )}
+                      </div>
                       <p className="truncate text-[12px] text-gray-500">{user?.email}</p>
                     </div>
                   </div>
+                  
+                  {user?.isAdmin && (
+                    <Link to="/admin" className="mb-1 flex items-center justify-between w-full rounded-xl bg-purple-50 px-3 py-2 text-left text-[13px] font-bold text-[#6d5dfc] transition hover:bg-purple-100">
+                      <span>⚡ Admin Portal</span>
+                      <span className="text-[10px] bg-purple-200/70 px-1.5 py-0.5 rounded font-black">ORDERS</span>
+                    </Link>
+                  )}
+
+                  <Link to="/orders" className="block w-full rounded-xl px-3 py-2.5 text-left text-[13px] font-semibold text-gray-700 transition hover:bg-gray-50 hover:text-[#6d5dfc]">
+                    My Orders
+                  </Link>
                   
                   <Link to="/profile" className="block w-full rounded-xl px-3 py-2.5 text-left text-[13px] font-semibold text-gray-700 transition hover:bg-gray-50 hover:text-[#6d5dfc]">
                     Edit Profile
@@ -278,7 +294,18 @@ function Home() {
                 <button onClick={() => { scrollToSection('offers'); setIsMobileMenuOpen(false); }} className="border-b border-black/[0.06] py-4 text-left text-[#6d5dfc] transition active:bg-black/5">Offers</button>
                 <Link to="/products" onClick={() => setIsMobileMenuOpen(false)} className="border-b border-black/[0.06] py-4 text-left transition active:bg-black/5">All Products</Link>
                 
-                {!user && (
+                {user ? (
+                  <>
+                    {user?.isAdmin && (
+                      <Link to="/admin" onClick={() => setIsMobileMenuOpen(false)} className="border-b border-black/[0.06] py-4 text-left font-black text-[#6d5dfc] transition active:bg-black/5 flex items-center justify-between">
+                        <span>⚡ Admin Portal</span>
+                        <span className="text-[10px] bg-purple-100 text-[#6d5dfc] px-2 py-0.5 rounded-full font-black">ADMIN</span>
+                      </Link>
+                    )}
+                    <Link to="/orders" onClick={() => setIsMobileMenuOpen(false)} className="border-b border-black/[0.06] py-4 text-left transition active:bg-black/5">My Orders</Link>
+                    <Link to="/profile" onClick={() => setIsMobileMenuOpen(false)} className="border-b border-black/[0.06] py-4 text-left transition active:bg-black/5">Edit Profile</Link>
+                  </>
+                ) : (
                   <>
                     <Link to="/login" onClick={() => setIsMobileMenuOpen(false)} className="border-b border-black/[0.06] py-4 text-left transition active:bg-black/5">Login</Link>
                     <Link to="/register" onClick={() => setIsMobileMenuOpen(false)} className="border-b border-black/[0.06] py-4 text-left transition active:bg-black/5">Register</Link>

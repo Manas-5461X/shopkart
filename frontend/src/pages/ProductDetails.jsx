@@ -76,8 +76,43 @@ const ProductDetails = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#f7f7f5] flex items-center justify-center">
-        <p className="text-sm font-semibold text-gray-500 animate-pulse">Loading product details...</p>
+      <div className="min-h-screen bg-[#f7f7f5] text-[#111]">
+        {/* Skeleton Header */}
+        <header className="sticky top-0 z-50 border-b border-black/[0.06] bg-[#f7f7f5]/95">
+          <div className="mx-auto flex h-[76px] max-w-[1400px] items-center px-5 sm:px-8">
+            <div className="h-6 w-24 bg-gray-200 rounded animate-pulse"></div>
+            <div className="ml-auto flex gap-6">
+              <div className="h-5 w-12 bg-gray-200 rounded animate-pulse"></div>
+              <div className="h-5 w-16 bg-gray-200 rounded animate-pulse"></div>
+            </div>
+          </div>
+        </header>
+
+        <main className="mx-auto max-w-[1000px] px-5 py-8 sm:px-8 lg:py-10">
+          <div className="h-4 w-32 bg-gray-200 rounded animate-pulse mb-10"></div>
+          
+          <div className="grid gap-10 md:grid-cols-2 lg:gap-16 items-start">
+            {/* Skeleton Image */}
+            <div className="aspect-[4/3] w-full rounded-[28px] bg-gray-200 animate-pulse"></div>
+            
+            {/* Skeleton Info */}
+            <div className="flex flex-col pt-2 md:pt-6">
+              <div className="h-3 w-16 bg-gray-200 rounded animate-pulse mb-4"></div>
+              <div className="h-10 w-3/4 bg-gray-200 rounded animate-pulse mb-6"></div>
+              <div className="h-8 w-24 bg-gray-200 rounded animate-pulse mb-8"></div>
+              <div className="h-[1px] w-full bg-gray-200 mb-8"></div>
+              
+              <div className="h-4 w-20 bg-gray-200 rounded animate-pulse mb-4"></div>
+              <div className="space-y-2 mb-8">
+                <div className="h-4 w-full bg-gray-200 rounded animate-pulse"></div>
+                <div className="h-4 w-full bg-gray-200 rounded animate-pulse"></div>
+                <div className="h-4 w-3/4 bg-gray-200 rounded animate-pulse"></div>
+              </div>
+              
+              <div className="h-14 w-full bg-gray-200 rounded-full animate-pulse mt-auto"></div>
+            </div>
+          </div>
+        </main>
       </div>
     );
   }

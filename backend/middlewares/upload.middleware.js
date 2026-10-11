@@ -2,21 +2,23 @@ import multer from "multer"
 
 const storage = multer.memoryStorage() ;// uses disk of computer 
 
+const allowedMimes = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
+
 const fileFilter = (req, file, cb) => {
-    // accept only images
-    if(file.mimetype.startsWith('image/')){
-        cb(null, true) // null means no error move forword 
-    }else{
-        cb(new Error('Only images are allowed'), false)
+    // accept only genuine image types
+    if (allowedMimes.includes(file.mimetype)) {
+        cb(null, true);
+    } else {
+        cb(new Error('Only valid image files (JPG, PNG, WEBP) are allowed'), false);
     }
-}
+};
 
 const upload = multer({ 
     storage, 
-    fileFilter ,
-    limits:{
-        filesize: 1024 * 1024 * 5 // 5mb
+    fileFilter,
+    limits: {
+        fileSize: 5 * 1024 * 1024 // 5MB max
     }
-}) ;
+});
 
 export default upload
