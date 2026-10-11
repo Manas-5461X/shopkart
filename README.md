@@ -1,148 +1,155 @@
 # ShopKart 🛍️✨
 
-![ShopKart Header](https://via.placeholder.com/1200x400/111111/FFFFFF?text=ShopKart+-+Premium+MERN+E-Commerce)
-
-**ShopKart** is a state-of-the-art, full-stack e-commerce application engineered to deliver a blazing-fast, highly secure, and visually stunning shopping experience. 
-
-Designed with a heavy emphasis on UI/UX and modern backend architecture, ShopKart serves as a comprehensive showcase of scalable full-stack development using the **MERN Stack** (MongoDB, Express.js, React.js, Node.js). 
+**ShopKart** is a state-of-the-art, full-stack e-commerce platform engineered with high performance, hardened multi-layer security, and an ultra-modern user experience using the **MERN Stack** (MongoDB, Express.js, React.js, Node.js) and **Tailwind CSS**.
 
 ---
 
-## 🌟 Comprehensive Feature Set
+## 🌟 Key Features
 
-### 🛡️ Robust Authentication & Security
-- **JWT & HttpOnly Cookies:** Implements industry-standard authentication using JSON Web Tokens stored securely in HttpOnly, SameSite cookies to mitigate XSS and CSRF attacks.
-- **Encrypted Credentials:** All sensitive user data, including passwords, is hashed and salted via `bcrypt` before reaching the database.
-- **Protected Routing:** Strict frontend and backend route guards ensure that only authenticated customers can access private features like Wishlists, Carts, and Profile settings.
-- **Session Management:** Seamless login, registration, password modification, and secure logout flows.
+### 💳 Razorpay Payment Gateway & Order Lifecycle
+- **Tamper-Proof Checkout:** Backend calculates order totals and taxes directly from database product records, ignoring client-side amount tampering.
+- **HMAC SHA-256 Verification:** Generates cryptographic signature verification (`order_id + payment_id`) using `RAZORPAY_KEY_SECRET`.
+- **Atomic Stock Management:** Automatically decrements item quantities upon confirmed payment using `{ stock: { $gte: quantity } }` to eliminate race conditions and prevent negative stock.
+- **Order Progression Tracking:** Orders transition through a 4-stage progression: `PLACED ➔ CONFIRMED ➔ SHIPPED ➔ DELIVERED` with interactive status steppers for customers and admins.
+- **Customer Order History:** Persistent order archives with detailed item breakdowns, shipping summaries, and live status badges.
 
-### 🛍️ Dynamic Product Discovery
-- **Live Search & Filtering:** Customers can instantly filter thousands of products by category or search term, with URL query string synchronization to ensure that direct links to searches always load the correct results.
-- **Smart Sorting:** Sort products dynamically by price (High-to-Low or Low-to-High) without reloading the page.
-- **Inventory Tracking:** Real-time stock status is displayed prominently. Products with `0` stock dynamically update the UI to prevent purchases, graying out buttons and displaying "Out of Stock" badges.
+### 🛡️ Admin Portal & Two-Factor Passkey Security
+- **2-Tier Authorization:** Restricts admin routes to verified emails (`ADMIN_EMAIL`) plus a mandatory server-verified passkey (`ADMIN_KEY`).
+- **Cryptographic Admin Sessions:** Entering the correct `ADMIN_KEY` issues a signed 4-hour JWT `admin_session` cookie and `x-admin-token` header, completely preventing DevTools/localStorage spoofing.
+- **Order Management:** Filter in-flight orders, transition progression statuses, view customer contact cards, and safely delete orders with a custom confirmation modal.
+- **Product & Inventory Management:** 
+  - Add new products with direct Cloudinary image upload.
+  - Edit prices, descriptions, categories, and replenish stock levels.
+  - Price changes reflect instantly across customer carts and checkout sessions in real time.
+  - Low stock (≤ 5 units) and Out-of-Stock alert indicators.
 
-### ❤️ Persistent Wishlist System
-- **MongoDB Relationships:** Instead of duplicating product data, the wishlist utilizes Mongoose `ObjectId` references to build a relational bridge between the `Customer` and `Product` collections.
-- **Graceful Degradation:** Wishlist badges fail silently for unauthenticated guest users to prevent annoying login popups, while still encouraging them to log in when attempting to add items.
-- **Optimistic UI Updates:** Instant toggle behavior on the frontend provides a snappy user experience while background synchronization handles the heavy lifting with the database.
+### 🔒 Enterprise-Grade Security Architecture
+- **Brute-Force Rate Limiting:** Powered by `express-rate-limit` (10 auth attempts/15 min, 5 admin passkey attempts/15 min).
+- **HTTP Security Headers:** Integrated `helmet` protecting against XSS, clickjacking, MIME-type sniffing, and cross-origin leaks.
+- **ReDoS & Search Injection Guard:** Sanitizes regex control characters in `GET /products` search filters.
+- **Strict Input & ID Validation:** Validates `mongoose.Types.ObjectId.isValid` across all route params to eliminate database CastError crashes.
+- **Environment-Aware Cookies:** `httpOnly`, `sameSite: "strict"`, and `secure: process.env.NODE_ENV === "production"`.
 
-### 🛒 Intelligent Shopping Cart
-- **Global State Management:** Powered by React Context API, the cart state is globally available, instantly updating the navbar badge, cart page, and product buttons simultaneously across the entire application.
-- **Granular Quantity Controls:** Customers can smoothly increment, decrement, or remove items. The backend enforces strict validation to prevent adding more items than currently exist in inventory.
-- **Dynamic Subtotals:** Live calculation of cart totals, syncing directly with the MongoDB persistent cart array so no items are lost upon page refresh.
-
-### 🎨 Premium UI/UX & Aesthetics
-- **Tailwind CSS Mastery:** The entire interface is built using custom Tailwind utility classes, completely avoiding generic component libraries.
-- **Glassmorphism & Gradients:** Utilizes sleek backdrop blurs, soft drop-shadows, and dynamic animated background blobs for a luxurious, modern aesthetic.
-- **Responsive By Design:** Flawless layout scaling from ultra-wide desktop monitors down to mobile devices, featuring a custom mobile navigation overlay.
-
----
-
-## 🛠️ Technology Stack Deep Dive
-
-### Frontend Architecture (Client)
-- **Core:** React.js (v18), initialized via Vite for lightning-fast HMR and optimized builds.
-- **Routing:** React Router v6 for declarative, component-based routing and parameter parsing (`useSearchParams`).
-- **Styling:** Tailwind CSS for a highly customized, constraint-based design system.
-- **Data Fetching:** Axios instance pre-configured with `withCredentials: true` to seamlessly handle authentication cookies automatically on every request.
-- **State Management:** A hybrid approach using React Context API for global needs (Cart, Auth) and highly-localized `useState/useEffect` for component-specific data (Wishlists, Product Details) to reduce unnecessary re-renders.
-
-### Backend Architecture (Server)
-- **Core:** Node.js paired with Express.js to create a lightweight, high-performance RESTful API.
-- **Database:** MongoDB Atlas (Cloud) managed via Mongoose ODM for strict schema validation and complex population queries.
-- **Authentication:** `jsonwebtoken` for stateless auth, `cookie-parser` for HTTP header extraction.
-- **Design Pattern:** Strict MVC (Model-View-Controller) separation of concerns.
+### 🛒 Real-Time Cart & Wishlist
+- **Normalized Cart Schema:** References `Product` ObjectIds instead of hardcoded amounts, ensuring price updates in the database always reflect immediately for users.
+- **Stock Limit Enforcements:** Prevents customers from increasing cart quantities beyond warehouse inventory.
+- **Reactive Global State:** Synchronized through React Context API across navigation badges, product buttons, and cart drawer.
 
 ---
 
-## 📡 Complete REST API Documentation
+## 🛠️ Tech Stack
+
+- **Frontend:** React 18, Vite, React Router v6, Tailwind CSS, React Hot Toast, Axios
+- **Backend:** Node.js, Express.js, Mongoose (MongoDB Atlas), Razorpay SDK, Cloudinary SDK, Multer, Helmet, Express Rate Limit, Bcrypt, JsonWebToken
+- **Payment Gateway:** Razorpay
+- **Image Storage:** Cloudinary
+
+---
+
+## 📡 REST API Reference
 
 ### 🔐 Authentication (`/customers`)
 | Method | Endpoint | Description | Access |
 | :--- | :--- | :--- | :---: |
-| `POST` | `/customers/register` | Create a new customer account, hash password, and set cookie | Public |
-| `POST` | `/customers/login` | Verify credentials and generate JWT HttpOnly cookie | Public |
-| `GET` | `/customers/me` | Retrieve the authenticated customer's profile data | Private |
-| `PATCH`| `/customers/change-password` | Verify old password and securely update to a new one | Private |
-| `POST` | `/customers/logout` | Destroy the session and clear the HttpOnly cookie | Private |
+| `POST` | `/customers/register` | Register new customer account (Rate limited) | Public |
+| `POST` | `/customers/login` | Authenticate customer and set JWT cookie (Rate limited) | Public |
+| `GET` | `/customers/me` | Fetch authenticated profile and admin privileges | Private |
+| `PATCH`| `/customers/change-password` | Update account password with length validation | Private |
+| `POST` | `/customers/verify-admin-key`| Verify `ADMIN_KEY` and issue signed admin session token | Admin |
+| `POST` | `/customers/logout` | Clear user and admin authentication cookies | Private |
 
 ### 📦 Products (`/products`)
 | Method | Endpoint | Description | Access |
 | :--- | :--- | :--- | :---: |
-| `GET` | `/products` | Fetch all products. Supports `?search`, `?category`, `?sort` | Public |
-| `GET` | `/products/:id`| Fetch detailed information for a single product | Public |
+| `GET` | `/products` | List products with ReDoS-safe search, category, sort | Public |
+| `GET` | `/products/:id` | Fetch product details by ID | Public |
+| `POST` | `/products` | Create product with Cloudinary image upload | Admin |
+| `PUT` | `/products/:id` | Update product info, price, stock, or image | Admin |
+| `DELETE`| `/products/:id` | Remove product from store catalog | Admin |
 
-### ❤️ Wishlist (`/wishlist`)
+### 💳 Orders & Payments (`/api/orders`)
 | Method | Endpoint | Description | Access |
 | :--- | :--- | :--- | :---: |
-| `GET` | `/wishlist` | Fetch the authenticated customer's fully populated wishlist | Private |
-| `POST` | `/wishlist/:productId`| Push a product ObjectId to the customer's wishlist array | Private |
-| `DELETE`| `/wishlist/:productId`| Pull a product ObjectId from the customer's wishlist array | Private |
+| `POST` | `/api/orders/create-payment-order` | Validate cart, check stock, create Razorpay order | Private |
+| `POST` | `/api/orders/verify-payment` | Verify HMAC signature, place order, deduct stock | Private |
+| `GET` | `/api/orders` | Customer order history (excludes abandoned carts) | Private |
+| `GET` | `/api/orders/:id` | Detailed order info and tracking | Private |
+| `DELETE`| `/api/orders/:id/cancel-pending` | Clean up unpaid/abandoned checkout order | Private |
+| `GET` | `/api/orders/admin/all` | Admin order overview across all store orders | Admin |
+| `PATCH`| `/api/orders/admin/:id/status` | Update progression (`PLACED` ➔ `DELIVERED`) | Admin |
+| `DELETE`| `/api/orders/admin/:id` | Delete order record | Admin |
 
-### 🛒 Cart (`/cart`)
+### 🛒 Cart & Wishlist (`/cart`, `/wishlist`)
 | Method | Endpoint | Description | Access |
 | :--- | :--- | :--- | :---: |
-| `GET` | `/cart` | Fetch the customer's cart, populated with product details | Private |
-| `POST` | `/cart/:productId`| Add a product to the cart, or increment if it already exists | Private |
-| `PATCH`| `/cart/:productId`| Explicitly set the quantity of a specific cart item | Private |
-| `DELETE`| `/cart/:productId`| Completely remove a product from the cart array | Private |
+| `GET` | `/cart` | Fetch populated cart items | Private |
+| `POST` | `/cart/:productId` | Add item or increment quantity | Private |
+| `PATCH`| `/cart/:productId` | Update item quantity (capped at stock) | Private |
+| `DELETE`| `/cart/:productId` | Remove item from cart | Private |
+| `GET` | `/wishlist` | Fetch customer wishlist | Private |
+| `POST` | `/wishlist/:productId` | Add product to wishlist | Private |
+| `DELETE`| `/wishlist/:productId` | Remove product from wishlist | Private |
 
 ---
 
-## ⚙️ Local Development Guide
+## ⚙️ Environment Variables
 
-### 1. Prerequisites
-Ensure your local development environment has the following installed:
-- Node.js (v18.0.0 or higher)
-- npm or yarn package manager
-- A MongoDB Atlas connection URI (or a running local MongoDB instance)
+Create a `.env` file in the `backend/` folder:
 
-### 2. Clone and Install
-Clone the repository to your local machine, then install the dependencies for both the frontend and backend architectures:
+```env
+PORT=5000
+NODE_ENV=development
+CLIENT_URL=http://localhost:5173
 
+# Database
+dbUrl=mongodb+srv://<username>:<password>@cluster0.mongodb.net/shopkart
+
+# Authentication Secrets
+JWT_SECRET=your_super_secret_jwt_key_here
+
+# Admin Access
+ADMIN_EMAIL=admin@shopkart.com
+ADMIN_KEY=your_secret_admin_passkey_here
+
+# Razorpay Payment Gateway
+RAZORPAY_KEY_ID=rzp_test_your_key_id
+RAZORPAY_KEY_SECRET=your_razorpay_secret_here
+
+# Cloudinary Image CDN
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
+```
+
+---
+
+## 🚀 Running Locally
+
+### 1. Install Dependencies
 ```bash
-# Clone the repository
-git clone https://github.com/your-username/shopkart.git
-cd shopkart
-
-# Install Backend dependencies
+# Backend
 cd backend
 npm install
 
-# Install Frontend dependencies
+# Frontend
 cd ../frontend
 npm install
 ```
 
-### 3. Environment Configuration
-Create a `.env` file in the root of the `backend/` directory to store your secrets securely:
-
-```env
-# backend/.env
-PORT=8000
-dbUrl=mongodb+srv://<username>:<password>@cluster.mongodb.net/shopkart
-JWT_SECRET=generate_a_very_secure_random_string_here
-NODE_ENV=development
-```
-
-*(Note: In development, the Vite frontend is configured to proxy API requests or use a base Axios URL pointing directly to `http://localhost:8000`)*
-
-### 4. Bootstrapping the Application
-ShopKart requires two separate terminal instances to run the full stack concurrently.
-
-**Terminal 1 (Booting the Server):**
+### 2. Start Backend Server
 ```bash
 cd backend
 npm run dev
 ```
+*Backend runs on `http://localhost:5000`*
 
-**Terminal 2 (Booting the Client):**
+### 3. Start Frontend Client
 ```bash
 cd frontend
 npm run dev
 ```
-
-The frontend will compile and become accessible at `http://localhost:5173`, seamlessly communicating with the backend API listening on `http://localhost:8000`.
+*Frontend runs on `http://localhost:5173`*
 
 ---
-*Built with ❤️ as a modern e-commerce portfolio application. Focused on scalable architecture and premium design.*
+
+*Engineered with precision for real-world reliability, performance, and clean code standards.*
