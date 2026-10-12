@@ -82,10 +82,19 @@ export const verifyPayment = async (req, res) => {
     try {
         const { shopKartOrderId, razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
 
+        if (!mongoose.Types.ObjectId.isValid(shopKartOrderId)) {
+            return res.status(400).json({ success: false, message: 'Invalid order ID format' });
+        }
+
         const order = await Order.findById(shopKartOrderId);
         if (!order) {
             console.error("verifyPayment: Order not found for ID:", shopKartOrderId);
             return res.status(404).json({ success: false, message: 'Order not found' });
+        }
+
+        // Verify the order belongs to the currently logged-in user
+        if (order.user.toString() !== req.user._id.toString()) {
+            return res.status(403).json({ success: false, message: 'Forbidden - Order does not belong to you' });
         }
 
         // Use the Razorpay Order ID stored in our database, NOT the one sent by the client, for security
