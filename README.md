@@ -82,10 +82,12 @@ graph TD
 ### 1. Razorpay Payment Gateway & Order Lifecycle
 - **Tamper-Proof Server Calculation:** Client requests never submit cart prices or totals. When `/api/orders/create-payment-order` is called, the backend reads live product documents directly from MongoDB, verifies current inventory, and calculates checkout amounts server-side.
 - **Cryptographic Signature Verification:** Upon payment completion on the frontend, Razorpay returns `razorpay_payment_id` and `razorpay_signature`. The backend validates the payment signature via HMAC SHA-256 using `RAZORPAY_KEY_SECRET`:
-  $$\text{Expected Signature} = \text{HMAC-SHA256}(\text{order\_id} + "|" + \text{payment\_id}, \text{secret})$$
+  ```text
+  Expected Signature = HMAC-SHA256(order_id + "|" + payment_id, RAZORPAY_KEY_SECRET)
+  ```
 - **Idempotency & Double-Verification Prevention:** Once verified, orders transition to `PAID` status, stock is decremented, and the user's cart is flushed. Replay requests are safely acknowledged without duplicate deductions.
 - **4-Stage Order Progression:** Orders follow a strict progression pipeline:
-  $$\text{PLACED} \longrightarrow \text{CONFIRMED} \longrightarrow \text{SHIPPED} \longrightarrow \text{DELIVERED}$$
+  `PLACED` ➔ `CONFIRMED` ➔ `SHIPPED` ➔ `DELIVERED`
   Customers and administrators track this progression through a visual `OrderStatusStepper` component.
 - **Abandoned Order Cleanup:** Unpaid checkout sessions (`PENDING_PAYMENT`) are filtered out of customer archives and discarded when the customer cancels checkout via `/api/orders/:id/cancel-pending`.
 
@@ -110,7 +112,7 @@ MongoDB's document-level locks ensure that stock updates are strictly serialized
 - **Direct Memory Buffer Uploads:** Admin product photos are accepted via `multer` memory storage and streamed directly to Cloudinary without persisting temporary files to the local server disk.
 - **ReDoS Sanitization:** Public product search queries are sanitized with regular expression escaping to prevent catastrophic backtracking attacks from freezing the event loop.
 - **Dynamic Filtering & Sorting:** Fast filtering by category and sorting by price (`price_asc`, `price_desc`).
-- **Low Stock Indicators:** Automatic visual warnings for items with low stock ($\le 5$ units) and out-of-stock disablement.
+- **Low Stock Indicators:** Automatic visual warnings for items with low stock (≤ 5 units) and out-of-stock disablement.
 
 ### 5. Reactive Cart & Wishlist Synchronization
 - **Normalized Cart Schema:** Carts store product `ObjectId` references rather than frozen prices. When an admin updates product pricing or details, customer carts automatically reflect current catalog rates upon reload.
