@@ -59,11 +59,12 @@ export const registerCustomer = async (req, res) => {
         await newCustomer.save()
 
         // generating token
+        const isProduction = process.env.NODE_ENV === "production";
         const cookiesOptions = {
             maxAge: 10 * 24 * 60 * 60 * 1000, // 10 days in ms
-            httpOnly: true, // it prevent client side js from accessing the cookie  
-            sameSite: "strict", // it prevent cross site request
-            secure: false, // No it does not ensure the cookie is only sent over https connection
+            httpOnly: true, // it prevents client side js from accessing the cookie  
+            sameSite: isProduction ? "none" : "lax", // enables cross-origin cookies in production
+            secure: isProduction, // HTTPS in production
         }
 
         const token = generateToken(newCustomer._id)
@@ -125,7 +126,7 @@ export const loginCustomer = async (req, res) => {
         const cookiesOptions = {
             maxAge: 10 * 24 * 60 * 60 * 1000, // 10 days in ms
             httpOnly: true, // it prevents client side js from accessing the cookie  
-            sameSite: "strict", // prevents cross site request forgery
+            sameSite: isProduction ? "none" : "lax", // enables cross-origin cookies in production
             secure: isProduction, // secure in production over HTTPS
         }
 
@@ -145,12 +146,12 @@ export const logoutCustomer = async (req, res) => {
         res.clearCookie("token", {
             httpOnly: true,
             secure: isProduction,
-            sameSite: "strict"
+            sameSite: isProduction ? "none" : "lax"
         });
         res.clearCookie("admin_session", {
             httpOnly: true,
             secure: isProduction,
-            sameSite: "strict"
+            sameSite: isProduction ? "none" : "lax"
         });
         return res.status(200).json({ message: "Customer logged out successfully" });
     } catch (error) {
@@ -284,7 +285,7 @@ export const verifyAdminKey = async (req, res) => {
         res.cookie('admin_session', adminToken, {
             maxAge: 4 * 60 * 60 * 1000, // 4 hours
             httpOnly: true,
-            sameSite: 'strict',
+            sameSite: isProduction ? 'none' : 'lax',
             secure: isProduction
         });
 

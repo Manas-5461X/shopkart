@@ -1,7 +1,7 @@
 import axios from "axios";
 
 export const axiosInstance = axios.create({
-    baseURL: "http://localhost:5000", // port at which server is running 
+    baseURL: import.meta.env.VITE_API_URL || "http://localhost:5000", // dynamic backend API url
     headers: {
         "Content-Type": "application/json", // communication using json format 
     },

@@ -25,23 +25,30 @@ const app = express()
 const PORT = process.env.PORT || 8000
 
 
+// Trust reverse proxy (e.g. Render, Railway, Heroku, AWS ELB) so secure cookies work
+if (process.env.NODE_ENV === "production") {
+    app.set("trust proxy", 1);
+}
+
 // Security and standard middlewares 
 app.use(helmet({
     crossOriginResourcePolicy: { policy: "cross-origin" }
 }))
 
+const clientUrl = process.env.CLIENT_URL ? process.env.CLIENT_URL.trim().replace(/\/+$/, '') : '';
 const allowedOrigins = [
     "http://localhost:5173",
-    process.env.CLIENT_URL
+    clientUrl
 ].filter(Boolean);
 
 app.use(cors({
     credentials: true, // for token passing 
     origin: (origin, callback) => {
-        if (!origin || allowedOrigins.includes(origin)) {
+        const cleanOrigin = origin ? origin.replace(/\/+$/, '') : origin;
+        if (!cleanOrigin || allowedOrigins.includes(cleanOrigin)) {
             callback(null, true);
         } else {
-            callback(new Error("Blocked by CORS policy"));
+            callback(new Error(`Blocked by CORS policy: ${origin}`));
         }
     },
 }))
